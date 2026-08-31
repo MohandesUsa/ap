@@ -411,7 +411,7 @@
           <div class="kv"><span class="k">هزینه اشتراک</span><span class="v" id="pw-price">—</span></div>
         </div>
         <button class="btn" id="pw-buy-btn" onclick="purchaseSubscription()">${ICON.check}خرید اشتراک سالانه</button>
-        <button class="btn ghost sm" style="margin-top:10px" onclick="goRoot('role-select')">خروج از حساب</button>
+        <button class="btn ghost sm" style="margin-top:10px" onclick="logout()">خروج از حساب</button>
       </div>
     </section>
 
@@ -448,11 +448,11 @@
           <button class="tab for-owner active" onclick="setAuthTab('owner','register')">ثبت‌نام</button>
         </div>
         <div id="owner-register-fields" style="display:block">
-          <div class="field"><label>نام و نام خانوادگی</label><input type="text" placeholder="مثلاً محمد احمدی"></div>
-          <div class="field"><label>نام شرکت (اختیاری)</label><input type="text" placeholder="نام شرکت حمل‌ونقل"></div>
+          <div class="field"><label>نام و نام خانوادگی</label><input id="oa-name" type="text" placeholder="مثلاً محمد احمدی"></div>
+          <div class="field"><label>نام شرکت (اختیاری)</label><input id="oa-company" type="text" placeholder="نام شرکت حمل‌ونقل"></div>
         </div>
-        <div class="field"><label>شماره موبایل</label><input type="tel" placeholder="09xxxxxxxxx" dir="ltr" style="text-align:left"></div>
-        <div class="field"><label id="owner-pass-label">رمز عبور</label><input type="password" placeholder="••••••••"></div>
+        <div class="field"><label>شماره موبایل</label><input id="oa-phone" type="tel" placeholder="09xxxxxxxxx" dir="ltr" style="text-align:left"></div>
+        <div class="field"><label id="owner-pass-label">رمز عبور</label><input id="oa-password" type="password" placeholder="••••••••"></div>
         <button class="btn owner-btn" onclick="ownerLogin()">${ICON.check}<span id="owner-auth-cta">ثبت‌نام</span></button>
         <div class="link-row">با ورود، <a href="javascript:void(0)">قوانین استفاده</a> را می‌پذیرید</div>
       </div>
@@ -675,7 +675,7 @@
           <div class="more-item"><div class="mi-icon">${ICON.report}</div><span>گزارش‌های مالی</span>${ICON.chev}</div>
           <div class="more-item" onclick="goTo('owner-profile')"><div class="mi-icon">${ICON.user}</div><span>ویرایش پروفایل</span>${ICON.chev}</div>
           <div class="more-item" onclick="goTo('owner-settings')"><div class="mi-icon">${ICON.settings}</div><span>تنظیمات برنامه</span>${ICON.chev}</div>
-          <div class="more-item" onclick="goRoot('role-select')"><div class="mi-icon" style="background:var(--danger-tint);color:var(--danger)">${ICON.logout}</div><span style="color:var(--danger)">خروج از حساب</span></div>
+          <div class="more-item" onclick="logout()"><div class="mi-icon" style="background:var(--danger-tint);color:var(--danger)">${ICON.logout}</div><span style="color:var(--danger)">خروج از حساب</span></div>
         </div>
       </div>
       ${bottomNav('owner','owner-more')}
@@ -738,11 +738,11 @@
           <button class="tab for-driver active" onclick="setAuthTab('driver','register')">ثبت‌نام با کد دعوت</button>
         </div>
         <div id="driver-register-fields" style="display:block">
-          <div class="field"><label>نام و نام خانوادگی</label><input type="text" placeholder="مثلاً علی رضایی"></div>
-          <div class="field"><label>کد دعوت</label><input type="text" placeholder="DRV-849251" dir="ltr" style="text-align:left"></div>
+          <div class="field"><label>نام و نام خانوادگی</label><input id="da-name" type="text" placeholder="مثلاً علی رضایی"></div>
+          <div class="field"><label>کد دعوت</label><input id="da-invite-code" type="text" placeholder="DRV-849251" dir="ltr" style="text-align:left"></div>
         </div>
-        <div class="field"><label>شماره موبایل</label><input type="tel" placeholder="09xxxxxxxxx" dir="ltr" style="text-align:left"></div>
-        <div class="field"><label id="driver-pass-label">رمز عبور</label><input type="password" placeholder="••••••••"></div>
+        <div class="field"><label>شماره موبایل</label><input id="da-phone" type="tel" placeholder="09xxxxxxxxx" dir="ltr" style="text-align:left"></div>
+        <div class="field"><label id="driver-pass-label">رمز عبور</label><input id="da-password" type="password" placeholder="••••••••"></div>
         <button class="btn driver-btn" onclick="driverLogin()">${ICON.check}<span id="driver-auth-cta">ثبت‌نام</span></button>
         <div class="link-row">با ورود، <a href="javascript:void(0)">قوانین استفاده</a> را می‌پذیرید</div>
       </div>
@@ -936,7 +936,7 @@
         <div class="card" style="padding:4px 12px">
           <div class="more-item" onclick="goTo('driver-profile')"><div class="mi-icon">${ICON.user}</div><span>ویرایش پروفایل</span>${ICON.chev}</div>
           <div class="more-item" onclick="goTo('driver-settings')"><div class="mi-icon">${ICON.settings}</div><span>تنظیمات برنامه</span>${ICON.chev}</div>
-          <div class="more-item" onclick="goRoot('role-select')"><div class="mi-icon" style="background:var(--danger-tint);color:var(--danger)">${ICON.logout}</div><span style="color:var(--danger)">خروج از حساب</span></div>
+          <div class="more-item" onclick="logout()"><div class="mi-icon" style="background:var(--danger-tint);color:var(--danger)">${ICON.logout}</div><span style="color:var(--danger)">خروج از حساب</span></div>
         </div>
       </div>
       ${bottomNav('driver','driver-more')}
@@ -1090,9 +1090,11 @@ function setCurrency(unit){
 }
 
 /* ---------------- Auth tabs ---------------- */
+let authMode = {owner:'register', driver:'register'};
 function setAuthTab(role, mode){
   document.querySelectorAll(`.tab.for-${role}`).forEach(t=>t.classList.remove('active'));
   event.currentTarget.classList.add('active');
+  authMode[role] = mode;
   const isRegister = mode==='register';
   document.getElementById(`${role}-register-fields`).style.display = isRegister ? 'block':'none';
   document.getElementById(`${role}-auth-title`).textContent = isRegister ? 'ساخت حساب جدید' : 'ورود به حساب';
@@ -1150,24 +1152,204 @@ function simulateTrialEnd(role){
   showPaywall(role);
 }
 
-function ownerLogin(){
-  if(!ownerSubscribed && ownerTrialDaysLeft<=0){ showPaywall('owner'); return; }
-  toast('ورود موفق — خوش آمدید'); goRoot('owner-dashboard'); renderAll();
-}
-function driverLogin(){
-  if(!driverSubscribed && driverTrialDaysLeft<=0){ showPaywall('driver'); return; }
-  toast('ورود موفق — خوش آمدید'); goRoot('driver-dashboard'); renderAll();
+/* ---------------- Backend ----------------
+   Real persistence: when this page runs inside a Claude Artifact with the
+   `db` capability granted, it uses that shared, realtime document store.
+   When self-hosted (Docker/Nginx/Netlify, per this folder's README) there
+   is no such capability, so it falls back to a same-shaped store backed by
+   the browser's localStorage — data still survives reloads, just per
+   browser instead of shared live across viewers. */
+class LocalDb {
+  constructor(){
+    this.key = 'ta_localdb_v1';
+    this.data = JSON.parse(localStorage.getItem(this.key) || '{}');
+    this.listeners = new Set();
+  }
+  _save(){ localStorage.setItem(this.key, JSON.stringify(this.data)); }
+  _notify(){ this.listeners.forEach(fn=>fn()); }
+  doc(path){
+    const self = this;
+    return {
+      id: path.split('/').pop(), path,
+      async get(){ const raw = self.data[path]; return { id: path.split('/').pop(), exists: raw !== undefined, data: () => raw }; },
+      async set(body){ self.data[path] = {...body}; self._save(); self._notify(); },
+      async update(body){ self.data[path] = {...(self.data[path]||{}), ...body}; self._save(); self._notify(); },
+      async delete(){ delete self.data[path]; self._save(); self._notify(); },
+      onSnapshot(next){
+        const fire = () => { const raw = self.data[path]; next({ id: path.split('/').pop(), exists: raw !== undefined, data: () => raw }); };
+        fire(); self.listeners.add(fire);
+        return () => self.listeners.delete(fire);
+      }
+    };
+  }
+  collection(path, filters){
+    const self = this;
+    filters = filters || [];
+    const prefix = path.endsWith('/') ? path : path + '/';
+    const matches = (obj) => filters.every(({f,op,v}) => {
+      const val = obj[f];
+      switch(op){
+        case '==': return val === v;
+        case '!=': return val !== v;
+        case '<': return val < v;
+        case '<=': return val <= v;
+        case '>': return val > v;
+        case '>=': return val >= v;
+        case 'in': return Array.isArray(v) && v.includes(val);
+        case 'not-in': return Array.isArray(v) && !v.includes(val);
+        case 'array-contains': return Array.isArray(val) && val.includes(v);
+        default: return true;
+      }
+    });
+    const readAll = () => Object.keys(self.data)
+      .filter(k => k.startsWith(prefix) && k.slice(prefix.length).indexOf('/') === -1)
+      .map(k => ({ id: k.slice(prefix.length), body: self.data[k] }))
+      .filter(({body}) => matches(body));
+    const col = {
+      path,
+      where(f,op,v){ return self.collection(path, [...filters, {f,op,v}]); },
+      doc(id){ return self.doc(prefix + (id || ('id' + Math.random().toString(36).slice(2)))); },
+      async add(body){ const ref = col.doc(); await ref.set(body); return ref; },
+      async get(){ const docs = readAll().map(({id,body}) => ({ id, exists:true, data: () => body })); return { docs, size: docs.length, empty: docs.length===0 }; },
+      onSnapshot(next){
+        const fire = async () => next(await col.get());
+        fire(); self.listeners.add(fire);
+        return () => self.listeners.delete(fire);
+      }
+    };
+    return col;
+  }
 }
 
-/* ---------------- Data store (pre-filled with example data — clear it from within the app to start fresh) ---------------- */
+let dbApi = null;
+let currentUser = null; // {phone, role, name}
+let unsubTrucks = null, unsubDriverData = null;
+
+async function initDb(){
+  try{ dbApi = (window.claude && typeof window.claude.use === 'function') ? await window.claude.use('db') : null; }
+  catch(e){ dbApi = null; }
+  if(!dbApi) dbApi = new LocalDb();
+
+  const saved = localStorage.getItem('ta_session');
+  if(saved && dbApi){
+    try{
+      const sess = JSON.parse(saved);
+      const snap = await dbApi.doc('users/'+sess.phone).get();
+      if(snap.exists && snap.data().role === sess.role){
+        setCurrentUser(snap.id, snap.data());
+        setTimeout(()=>{
+          goRoot(sess.role==='owner' ? 'owner-dashboard' : 'driver-dashboard');
+          renderAll();
+        }, 900);
+        return;
+      }
+    } catch(e){ /* fall through to role-select */ }
+  }
+  setTimeout(()=>{ if(navStack.length===1 && navStack[0]==='splash'){ goRoot('role-select'); } }, 900);
+}
+
+function setCurrentUser(phone, data){
+  currentUser = {phone, role: data.role, name: data.name || ''};
+  localStorage.setItem('ta_session', JSON.stringify({phone, role: data.role}));
+  if(currentUser.role === 'owner') subscribeOwnerData(); else subscribeDriverData();
+}
+
+function logout(){
+  currentUser = null;
+  localStorage.removeItem('ta_session');
+  if(unsubTrucks){ unsubTrucks(); unsubTrucks = null; }
+  if(unsubDriverData){ unsubDriverData(); unsubDriverData = null; }
+  store.trucks = []; store.drivers = [];
+  goRoot('role-select');
+}
+
+function subscribeOwnerData(){
+  if(!dbApi || !currentUser) return;
+  if(unsubTrucks) unsubTrucks();
+  if(unsubDriverData) unsubDriverData();
+  unsubTrucks = dbApi.collection('trucks').where('ownerId','==',currentUser.phone).onSnapshot(snap=>{
+    store.trucks = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    renderTrucks(); renderDashboardStats();
+  }, e=>console.error('trucks sync error', e));
+  unsubDriverData = dbApi.collection('users').where('role','==','driver').where('ownerId','==',currentUser.phone).onSnapshot(snap=>{
+    store.drivers = snap.docs.map(d=>({id:d.id, name:d.data().name, phone:d.data().phone, truck:d.data().truckPlate, status:d.data().status, payType:d.data().payType, payValue:d.data().payValue}));
+    renderDrivers(); renderDashboardStats(); renderSettlement();
+  }, e=>console.error('drivers sync error', e));
+}
+
+function subscribeDriverData(){
+  if(!dbApi || !currentUser) return;
+  if(unsubDriverData) unsubDriverData();
+  unsubDriverData = dbApi.doc('users/'+currentUser.phone).onSnapshot(snap=>{
+    if(!snap.exists) return;
+    const d = snap.data();
+    store.drivers = [{id:snap.id, name:d.name, phone:d.phone, truck:d.truckPlate, status:d.status, payType:d.payType, payValue:d.payValue}];
+    renderDrivers(); renderSettlement(); renderDashboardStats();
+  }, e=>console.error('driver profile sync error', e));
+}
+
+async function ownerLogin(){
+  if(!ownerSubscribed && ownerTrialDaysLeft<=0){ showPaywall('owner'); return; }
+  if(!dbApi){ toast('اتصال به دیتابیس برقرار نیست'); return; }
+  const phone = document.getElementById('oa-phone').value.trim();
+  const password = document.getElementById('oa-password').value;
+  if(!phone || !password){ toast('شماره موبایل و رمز عبور را وارد کنید'); return; }
+  try{
+    if(authMode.owner === 'register'){
+      const name = document.getElementById('oa-name').value.trim();
+      const company = document.getElementById('oa-company').value.trim();
+      if(!name){ toast('نام و نام خانوادگی را وارد کنید'); return; }
+      const existing = await dbApi.doc('users/'+phone).get();
+      if(existing.exists){ toast('این شماره قبلاً ثبت‌نام کرده؛ از تب «ورود» استفاده کنید'); return; }
+      const data = {role:'owner', name, company, phone, password, createdAt: Date.now()};
+      await dbApi.doc('users/'+phone).set(data);
+      setCurrentUser(phone, data);
+      toast('ثبت‌نام موفق — خوش آمدید');
+    } else {
+      const snap = await dbApi.doc('users/'+phone).get();
+      if(!snap.exists || snap.data().role !== 'owner' || snap.data().password !== password){ toast('شماره موبایل یا رمز عبور اشتباه است'); return; }
+      setCurrentUser(phone, snap.data());
+      toast('ورود موفق — خوش آمدید');
+    }
+    goRoot('owner-dashboard'); renderAll();
+  } catch(e){ console.error(e); toast('خطا در ارتباط با دیتابیس'); }
+}
+
+async function driverLogin(){
+  if(!driverSubscribed && driverTrialDaysLeft<=0){ showPaywall('driver'); return; }
+  if(!dbApi){ toast('اتصال به دیتابیس برقرار نیست'); return; }
+  const phone = document.getElementById('da-phone').value.trim();
+  const password = document.getElementById('da-password').value;
+  if(!phone || !password){ toast('شماره موبایل و رمز عبور را وارد کنید'); return; }
+  try{
+    if(authMode.driver === 'register'){
+      const name = document.getElementById('da-name').value.trim();
+      const code = document.getElementById('da-invite-code').value.trim();
+      if(!name || !code){ toast('نام و کد دعوت را وارد کنید'); return; }
+      const invSnap = await dbApi.doc('invitations/'+code).get();
+      if(!invSnap.exists || invSnap.data().status !== 'pending'){ toast('کد دعوت معتبر نیست یا قبلاً استفاده شده'); return; }
+      const inv = invSnap.data();
+      const existing = await dbApi.doc('users/'+phone).get();
+      if(existing.exists){ toast('این شماره قبلاً ثبت‌نام کرده؛ از تب «ورود» استفاده کنید'); return; }
+      const data = {role:'driver', name, phone, password, ownerId: inv.ownerId, truckPlate: inv.truckPlate, status:'فعال', payType:'percent', payValue:20, createdAt: Date.now()};
+      await dbApi.doc('users/'+phone).set(data);
+      await dbApi.doc('invitations/'+code).update({status:'accepted', driverPhone: phone});
+      setCurrentUser(phone, data);
+      toast('ثبت‌نام موفق — خوش آمدید');
+    } else {
+      const snap = await dbApi.doc('users/'+phone).get();
+      if(!snap.exists || snap.data().role !== 'driver' || snap.data().password !== password){ toast('شماره موبایل یا رمز عبور اشتباه است'); return; }
+      setCurrentUser(phone, snap.data());
+      toast('ورود موفق — خوش آمدید');
+    }
+    goRoot('driver-dashboard'); renderAll();
+  } catch(e){ console.error(e); toast('خطا در ارتباط با دیتابیس'); }
+}
+
+/* ---------------- Data store (trucks/drivers are synced live from the db capability once logged in; trips/expenses stay local — the real backend has no endpoints for those yet either) ---------------- */
 const store = {
-  trucks: [
-    {id:1, plate:'22 الف 262 ایران 22', brand:'ولوو', model:'1401'},
-    {id:2, plate:'88 ب 910 ایران 10', brand:'اسکانیا', model:'1398'}
-  ],
-  drivers: [
-    {id:1, name:'علی رضایی', phone:'0935xxxxxxx', truck:'22 الف 262', status:'فعال', payType:'percent', payValue:20}
-  ],
+  trucks: [],
+  drivers: [],
   trips: [
     {id:1, origin:'تهران', dest:'اصفهان', cargo:'مصالح ساختمانی', weight:'18', income:8500000, date:'1403/06/02', desc:'بار به‌موقع تحویل داده شد.', commission:250000, settled:true, paidTo:'owner'},
     {id:2, origin:'اصفهان', dest:'شیراز', cargo:'مواد غذایی', weight:'12', income:6200000, date:'1403/06/05', desc:'', commission:150000, settled:false, paidTo:null}
@@ -1177,7 +1359,7 @@ const store = {
     {id:2, cat:'عوارض', amount:180000, date:'1403/06/05', desc:'عوارض آزادراه'}
   ],
   payments: [],
-  nextId: {truck:3, driver:2, trip:3, expense:3}
+  nextId: {trip:3, expense:3}
 };
 let pendingCat = 'سوخت';
 
@@ -1193,12 +1375,12 @@ function renderTrucks(){
   } else {
     el.innerHTML = store.trucks.map(t=>`
       <div class="list-item press-item"
-           onmousedown="startPress(${t.id})" onmouseup="cancelPress()" onmouseleave="cancelPress()"
-           ontouchstart="startPress(${t.id})" ontouchend="cancelPress()" ontouchmove="cancelPress()"
+           onmousedown="startPress('${t.id}')" onmouseup="cancelPress()" onmouseleave="cancelPress()"
+           ontouchstart="startPress('${t.id}')" ontouchend="cancelPress()" ontouchmove="cancelPress()"
            oncontextmenu="return false">
         <div class="avatar" style="background:var(--owner-tint);color:var(--owner-dark)">${ICON.truck}</div>
         <div class="meta"><strong>${t.brand} ${t.model}</strong><span>پلاک: ${t.plate}</span></div>
-        <div class="side"><button class="icon-btn" onclick="openTruckActions(${t.id})">${ICON.chev}</button></div>
+        <div class="side"><button class="icon-btn" onclick="openTruckActions('${t.id}')">${ICON.chev}</button></div>
       </div>`).join('');
   }
   if(selEl) selEl.innerHTML = store.trucks.map(t=>`<option value="${t.plate}">${t.brand} ${t.model} — ${t.plate}</option>`).join('');
@@ -1210,7 +1392,7 @@ function renderDrivers(){
   const el = document.getElementById('drivers-list');
   el.innerHTML = !store.drivers.length ? emptyState('هنوز راننده‌ای ثبت نشده است') :
     store.drivers.map(d=>`
-      <div class="list-item" style="cursor:pointer" onclick="openDriverDetail(${d.id})">
+      <div class="list-item" style="cursor:pointer" onclick="openDriverDetail('${d.id}')">
         <div class="avatar" style="background:var(--owner-tint);color:var(--owner-dark)">${d.name.charAt(0)}</div>
         <div class="meta"><strong>${d.name}</strong><span>کامیون: ${d.truck} · ${payDescription(d)}</span></div>
         <div class="side" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="status-pill ${d.status==='فعال'?'active':'pending'}">${d.status}</span>${ICON.chev}</div>
@@ -1464,7 +1646,7 @@ function openAddTruck(){
   document.getElementById('af-model').value = '';
   goTo('owner-add-truck');
 }
-function submitAddTruck(){
+async function submitAddTruck(){
   const n2 = document.getElementById('af-plate-2').value.trim();
   const letter = document.getElementById('af-plate-letter').value;
   const n3 = document.getElementById('af-plate-3').value.trim();
@@ -1473,17 +1655,18 @@ function submitAddTruck(){
   const brand = document.getElementById('af-brand').value.trim();
   const model = document.getElementById('af-model').value.trim();
   if(!plate || !brand || !model){ toast('لطفاً شماره پلاک، برند و مدل را کامل وارد کنید'); return; }
-  if(editingTruckId){
-    const t = store.trucks.find(x=>x.id===editingTruckId);
-    if(t) Object.assign(t, {plate, brand, model});
-    toast('کامیون ویرایش شد');
-    editingTruckId = null;
-  } else {
-    store.trucks.push({id:store.nextId.truck++, plate, brand, model});
-    toast('کامیون با موفقیت افزوده شد');
-  }
-  renderTrucks(); renderDashboardStats();
-  goTab('owner-trucks');
+  if(!dbApi || !currentUser){ toast('اتصال به دیتابیس برقرار نیست'); return; }
+  try{
+    if(editingTruckId){
+      await dbApi.doc('trucks/'+editingTruckId).update({plate, brand, model});
+      toast('کامیون ویرایش شد');
+      editingTruckId = null;
+    } else {
+      await dbApi.collection('trucks').add({ownerId: currentUser.phone, plate, brand, model, createdAt: Date.now()});
+      toast('کامیون با موفقیت افزوده شد');
+    }
+    goTab('owner-trucks');
+  } catch(e){ console.error(e); toast('خطا در ذخیره‌سازی کامیون'); }
 }
 
 /* ---------------- Long-press (truck edit/delete) ---------------- */
@@ -1519,25 +1702,30 @@ function editTruckAction(){
   document.getElementById('af-model').value = t.model;
   goTo('owner-add-truck');
 }
-function deleteTruckAction(){
-  store.trucks = store.trucks.filter(t=>t.id!==actionTruckId);
+async function deleteTruckAction(){
+  const id = actionTruckId;
   closeTruckActions();
-  renderTrucks(); renderDashboardStats();
-  toast('کامیون حذف شد');
+  if(!id || !dbApi) return;
+  try{ await dbApi.doc('trucks/'+id).delete(); toast('کامیون حذف شد'); }
+  catch(e){ console.error(e); toast('خطا در حذف کامیون'); }
 }
-function sendInvite(){
+async function sendInvite(){
   const phone = document.getElementById('inv-phone').value.trim();
+  const truckPlate = document.getElementById('inv-truck').value;
   if(!phone){ toast('شماره موبایل راننده را وارد کنید'); return; }
+  if(!truckPlate){ toast('ابتدا یک کامیون ثبت کنید'); return; }
+  if(!dbApi || !currentUser){ toast('اتصال به دیتابیس برقرار نیست'); return; }
   const code = 'DRV-' + Math.floor(100000 + Math.random()*899999);
-  document.getElementById('invite-code-val').textContent = code;
-  document.getElementById('invite-result').style.display = 'block';
+  try{
+    await dbApi.doc('invitations/'+code).set({code, ownerId: currentUser.phone, truckPlate, phone, status:'pending', createdAt: Date.now()});
+    document.getElementById('invite-code-val').textContent = code;
+    document.getElementById('invite-result').style.display = 'block';
+  } catch(e){ console.error(e); toast('خطا در ارسال دعوت'); }
 }
 function finishInvite(){
-  store.drivers.push({id:store.nextId.driver++, name:'راننده جدید', phone:document.getElementById('inv-phone').value.trim(), truck: document.getElementById('inv-truck').value || '—', status:'در انتظار پذیرش', payType:'percent', payValue:20});
-  renderDrivers();
-  toast('دعوت ارسال شد');
   document.getElementById('invite-result').style.display = 'none';
   document.getElementById('inv-phone').value = '';
+  toast('کد دعوت را برای راننده بفرستید تا با آن ثبت‌نام کند');
   goTab('owner-drivers');
 }
 
@@ -1561,22 +1749,25 @@ function selectPayType(type){
   document.getElementById('dd-percent-field').style.display = type==='percent' ? 'block' : 'none';
   document.getElementById('dd-salary-field').style.display = type==='salary' ? 'block' : 'none';
 }
-function saveDriverPay(){
+async function saveDriverPay(){
   const d = store.drivers.find(x=>x.id===selectedDriverId);
-  if(!d) return;
+  if(!d || !dbApi) return;
   const type = document.querySelector('#driver-detail .toggle-chip.sel[data-paytype]').dataset.paytype;
+  let payValue;
   if(type==='percent'){
     const v = parseInt(document.getElementById('dd-percent-value').value.replace(/[^\d]/g,''),10);
     if(!v){ toast('درصد راننده را وارد کنید'); return; }
-    d.payType = 'percent'; d.payValue = v;
+    payValue = v;
   } else {
     const raw = document.getElementById('dd-salary-value').value.replace(/[^\d]/g,'');
     if(!raw){ toast('مبلغ حقوق ماهانه را وارد کنید'); return; }
-    d.payType = 'salary'; d.payValue = fromDisplayUnit(parseInt(raw,10));
+    payValue = fromDisplayUnit(parseInt(raw,10));
   }
-  renderDrivers(); renderSettlement();
-  toast('تنظیمات حقوق راننده ذخیره شد');
-  goTab('owner-drivers');
+  try{
+    await dbApi.doc('users/'+selectedDriverId).update({payType: type, payValue});
+    toast('تنظیمات حقوق راننده ذخیره شد');
+    goTab('owner-drivers');
+  } catch(e){ console.error(e); toast('خطا در ذخیره‌سازی'); }
 }
 function submitTrip(){
   const origin = document.getElementById('tf-origin').value.trim();
@@ -1631,7 +1822,7 @@ document.getElementById('inv-truck');
 applyCurrencyLabels();
 renderAll();
 render('splash');
-setTimeout(()=>{ if(navStack.length===1 && navStack[0]==='splash'){ goRoot('role-select'); } }, 2200);
+initDb();
 </script>
 </body>
 </html>
