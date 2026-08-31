@@ -132,4 +132,31 @@ export function registerInvitationRoutes(router: Router, db: DbClient, config: A
       })),
     });
   }, [auth, requireRole('owner')]);
+
+  router.put('/drivers/:driverId/pay', async (ctx) => {
+    const owner = await profiles.getOwnerByUserId(ctx.userId!);
+    if (!owner) throw AppError.forbidden();
+    // Same 404-not-403 shape as truck ownership checks: an owner cannot even confirm a driver
+    // id exists unless that driver is actively on one of their own trucks.
+    const link = await invitations.findActiveLinkForOwnerAndDriver(owner.id, ctx.params.driverId);
+    if (!link) throw AppError.notFound('راننده یافت نشد.');
+
+    const body = requireFields(ctx.body, ['payType', 'payValue']);
+    if (body.payType !== 'percent' && body.payType !== 'salary') {
+      throw AppError.validation('payType باید percent یا salary باشد.', { field: 'payType' });
+    }
+    const payValue = Math.trunc(Number(body.payValue));
+    if (!Number.isFinite(payValue) || payValue <= 0) {
+      throw AppError.validation('payValue باید عددی مثبت باشد.', { field: 'payValue' });
+    }
+
+    const driver = await profiles.getDriverById(ctx.params.driverId);
+    const before = driver ? { payType: driver.pay_type, payValue: driver.pay_value } : undefined;
+    const updated = await profiles.updateDriverPay(ctx.params.driverId, body.payType, payValue);
+    await recordAudit(db, {
+      userId: ctx.userId!, action: 'UPDATE_DRIVER_PAY', entityType: 'driver', entityId: ctx.params.driverId,
+      oldValue: before, newValue: { payType: updated.pay_type, payValue: updated.pay_value },
+    });
+    sendSuccess(ctx.res, { id: updated.id, payType: updated.pay_type, payValue: updated.pay_value });
+  }, [auth, requireRole('owner')]);
 }

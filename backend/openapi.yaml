@@ -261,12 +261,154 @@ paths:
 
   /owner/dashboard:
     get:
-      summary: Owner dashboard summary (financial fields are placeholders — Phase 3 §27)
+      summary: Owner dashboard summary (financial fields are running totals across all history — see dashboard.routes.ts)
       security: [{ bearerAuth: [] }]
       responses: { "200": { description: OK } }
 
   /driver/dashboard:
     get:
-      summary: Driver dashboard summary (financial fields are placeholders — Phase 3 §27)
+      summary: Driver dashboard summary (financial fields are running totals across all history — see dashboard.routes.ts)
       security: [{ bearerAuth: [] }]
       responses: { "200": { description: OK } }
+
+  /drivers/{driverId}/pay:
+    parameters: [{ name: driverId, in: path, required: true, schema: { type: string } }]
+    put:
+      summary: Owner sets how a driver's pay is calculated (percent of each trip, or a flat monthly salary)
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [payType, payValue]
+              properties:
+                payType: { type: string, enum: [percent, salary] }
+                payValue: { type: integer, minimum: 1 }
+      responses:
+        "200": { description: Updated }
+        "404": { description: "Driver not actively connected to one of the owner's trucks" }
+        "422": { description: Validation error }
+
+  /trips:
+    post:
+      summary: Driver logs a service against the truck they are currently assigned to
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [origin, destination, income, tripDate]
+              properties:
+                origin: { type: string }
+                destination: { type: string }
+                cargoType: { type: string, nullable: true }
+                cargoWeight: { type: string, nullable: true }
+                income: { type: integer, minimum: 0 }
+                tripDate: { type: string }
+                description: { type: string, nullable: true }
+      responses:
+        "201": { description: Created }
+        "403": { description: "Caller is not a driver, or has no active truck" }
+
+  /driver/trips:
+    get:
+      summary: List the authenticated driver's own trips
+      security: [{ bearerAuth: [] }]
+      responses: { "200": { description: OK } }
+
+  /owner/trips:
+    get:
+      summary: List every trip logged on any of the owner's trucks, by any driver
+      security: [{ bearerAuth: [] }]
+      responses: { "200": { description: OK } }
+
+  /trips/{id}/settlement:
+    parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+    put:
+      summary: Owner records the barnameh commission and who the trip's money actually went to
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                commission: { type: integer, minimum: 0 }
+                settled: { type: boolean }
+                paidTo: { type: string, enum: [driver, owner], nullable: true }
+      responses:
+        "200": { description: Updated }
+        "404": { description: "Trip not on a truck this owner owns" }
+
+  /expenses:
+    post:
+      summary: Driver logs an expense against the truck they are currently assigned to
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [category, amount, expenseDate]
+              properties:
+                category: { type: string }
+                amount: { type: integer, minimum: 0 }
+                expenseDate: { type: string }
+                description: { type: string, nullable: true }
+      responses:
+        "201": { description: Created }
+        "403": { description: "Caller is not a driver, or has no active truck" }
+
+  /driver/expenses:
+    get:
+      summary: List the authenticated driver's own expenses
+      security: [{ bearerAuth: [] }]
+      responses: { "200": { description: OK } }
+
+  /owner/expenses:
+    get:
+      summary: List every expense logged on any of the owner's trucks
+      security: [{ bearerAuth: [] }]
+      responses: { "200": { description: OK } }
+
+  /owner/settlement/summary:
+    get:
+      summary: Income/expense/entitlement/remaining-owed summary for one of the owner's drivers
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: driverId, in: query, required: true, schema: { type: string } }
+      responses:
+        "200": { description: OK }
+        "404": { description: "driverId not actively connected to one of the owner's trucks" }
+
+  /driver/settlement/summary:
+    get:
+      summary: The authenticated driver's own income/expense/entitlement/remaining-owed summary
+      security: [{ bearerAuth: [] }]
+      responses: { "200": { description: OK } }
+
+  /owner/settlement/payments:
+    post:
+      summary: Owner records a manual payment made to a driver, reducing what is still owed
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [driverId, amount]
+              properties:
+                driverId: { type: string }
+                amount: { type: integer, minimum: 1 }
+                paymentDate: { type: string }
+                method: { type: string, nullable: true }
+      responses:
+        "201": { description: "Recorded — returns the updated settlement summary" }
+        "404": { description: "driverId not actively connected to one of the owner's trucks" }
+        "422": { description: "amount exceeds the remaining balance owed" }

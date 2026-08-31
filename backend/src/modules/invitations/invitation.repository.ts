@@ -118,6 +118,19 @@ export class InvitationRepository {
     return result.rows[0] ?? null;
   }
 
+  /** Confirms `driverId` is currently, actively assigned to one of `ownerId`'s trucks, and
+   *  returns which truck — the ownership check every owner-facing per-driver route (pay
+   *  settings, settlement summary) needs before trusting a client-supplied driverId. */
+  async findActiveLinkForOwnerAndDriver(ownerId: string, driverId: string) {
+    const result = await this.db.query<{ id: string; truck_id: string }>(
+      `SELECT dt.id, dt.truck_id FROM driver_trucks dt
+       JOIN trucks t ON t.id = dt.truck_id
+       WHERE dt.driver_id = $1 AND t.owner_id = $2 AND dt.status = 'active'`,
+      [driverId, ownerId],
+    );
+    return result.rows[0] ?? null;
+  }
+
   /** Phase 3 §25: disconnecting a driver ends the relationship record rather than deleting it,
    *  preserving history. */
   async disconnectDriver(driverTruckId: string): Promise<void> {

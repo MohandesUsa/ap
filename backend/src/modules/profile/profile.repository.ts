@@ -32,6 +32,22 @@ export class ProfileRepository {
     return result.rows[0] ?? null;
   }
 
+  async getDriverById(driverId: string): Promise<DriverRow | null> {
+    const result = await this.db.query<DriverRow>('SELECT * FROM drivers WHERE id = $1', [driverId]);
+    return result.rows[0] ?? null;
+  }
+
+  /** Owner-only action (Phase 2's DriverRepositoryImpl.kt noted this had no backend endpoint
+   *  yet — this is that endpoint): how a driver's pay is calculated is the owner's call, not
+   *  the driver's, matching the prototype's "حقوق راننده" screen. */
+  async updateDriverPay(driverId: string, payType: 'percent' | 'salary', payValue: number): Promise<DriverRow> {
+    const result = await this.db.query<DriverRow>(
+      'UPDATE drivers SET pay_type = $1, pay_value = $2 WHERE id = $3 RETURNING *',
+      [payType, payValue, driverId],
+    );
+    return result.rows[0];
+  }
+
   async updateDriver(userId: string, fields: { fullName?: string }): Promise<DriverRow> {
     const existing = await this.getDriverByUserId(userId);
     if (!existing) throw new Error('Driver profile not found');
