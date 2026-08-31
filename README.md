@@ -1,0 +1,138 @@
+# TruckAccounting
+
+اپلیکیشن اندروید واحد برای مدیریت مشترک بین «صاحب کامیون» و «راننده» — Kotlin، Jetpack Compose، Clean Architecture.
+
+```
+TruckAccounting/
+├── android/     ← پروژه واقعی Android (Phase 2 + اتصال واقعی به Backend در Phase 3)
+├── backend/     ← Backend واقعی روی PostgreSQL (Phase 3) — README مخصوص خودش را ببینید
+├── web/         ← نسخهٔ وب پیش‌نمایش (برای دیدن سریع UI روی سرور، جدا از اپ اندروید)
+└── docs/
+    ├── ARCHITECTURE.md      ← سند معماری تأییدشدهٔ Phase 1
+    └── prototype/index.html ← HTML Prototype تأییدشدهٔ Phase 1 (حذف نشده، طبق قانون ۲۹)
+```
+
+---
+
+## ⚠️ یک نکتهٔ مهم دربارهٔ نحوهٔ ساخت این پروژه
+
+**Phase 2 (اپلیکیشن Android):** در محیطی بدون Android SDK نوشته شد — کد کامل است اما هرگز با `./gradlew assembleDebug` واقعاً Build نشد؛ بررسی‌های ایستا (تعادل آکولاد، Importهای تکراری، تطابق Package با مسیر پوشه، تطابق هر `R.string.x` با تعریف واقعی‌اش) روی تمام فایل‌ها انجام شد و بدون خطا بود، اما تأیید نهایی با Android Studio روی دستگاه خودتان است.
+
+**Phase 3 (Backend):** برخلاف Phase 2، این بخش واقعاً **اجرا و تست شد** — این محیط Node.js 22 داشت که می‌تواند فایل‌های TypeScript را مستقیم اجرا کند، و به کمک ماژول داخلی `node:sqlite`، همان کد و همان Migration SQL که برای PostgreSQL واقعی نوشته شده، اینجا هم واقعاً اجرا شد. نتیجه: **۳۳ تست واقعی نوشته و اجرا شدند و هرکدام پاس شدند** — شامل کل سناریوی Owner→Truck→Invite→Driver→Accept→Dashboard→Logout→Login مجدد، و تست‌های امنیتی صریح («Owner A نمی‌تواند کامیون Owner B را ببیند»، «راننده B نمی‌تواند دعوت راننده A را بدزدد»، و غیره). جزئیات کامل در `backend/README.md`.
+
+آنچه در این محیط واقعاً اجرا **نشد**: خودِ PostgreSQL و Docker (چون در sandbox وجود نداشتند) و کل زنجیرهٔ Android (چون SDK وجود نداشت). این دو مرحله (بالا آوردن `docker compose` برای Backend، و Build گرفتن از Android در Android Studio) قدم بعدی شماست.
+
+---
+
+## اجرای پروژه در Android Studio
+
+1. **نصب Android Studio** (نسخهٔ Koala یا جدیدتر پیشنهاد می‌شود) از [developer.android.com/studio](https://developer.android.com/studio).
+2. پوشهٔ `android/` (نه پوشهٔ ریشهٔ `TruckAccounting/`) را با گزینهٔ **Open** در Android Studio باز کنید.
+3. Android Studio به‌طور خودکار Gradle Wrapper را می‌سازد (چون `gradle-wrapper.properties` وجود دارد ولی jar آن نیست) و شروع به Sync می‌کند. اگر خودکار انجام نشد: `File → Sync Project with Gradle Files`.
+4. صبر کنید تا دانلود Dependencyها (AndroidX، Compose، Hilt، Room، Retrofit، ...) تمام شود — به اینترنت نیاز دارد.
+5. اگر پرامپت SDK/License ظاهر شد، `Accept` را بزنید (نیاز به `compileSdk 34` / `Build-Tools` متناظر).
+
+### اجرا روی Emulator
+
+1. `Tools → Device Manager → Create Device` یک دستگاه مجازی (مثلاً Pixel 8، API 34) بسازید.
+2. دکمهٔ ▶ Run را با انتخاب همان Emulator بزنید.
+
+### اجرا روی گوشی واقعی
+
+1. در گوشی: `Settings → About phone` روی «Build number» چند بار بزنید تا Developer Options فعال شود.
+2. `Settings → Developer options → USB debugging` را روشن کنید.
+3. گوشی را با کابل USB وصل کنید و در دیالوگ گوشی «Allow USB debugging» را تأیید کنید.
+4. گوشی در لیست دستگاه‌های بالای Android Studio ظاهر می‌شود؛ ▶ Run را بزنید.
+
+### ساخت Debug APK
+
+- از داخل Android Studio: `Build → Build APK(s)`.
+- یا از ترمینال (بعد از این‌که Android Studio یک‌بار Sync را انجام داد و `gradlew` واقعی ساخته شد):
+  ```bash
+  cd android
+  ./gradlew assembleDebug
+  ```
+  خروجی در `android/app/build/outputs/apk/debug/app-debug.apk` قرار می‌گیرد.
+
+### اجرای تست‌ها
+
+```bash
+cd android
+./gradlew test              # Unit test های همهٔ ماژول‌ها (JVM، بدون نیاز به Emulator)
+./gradlew connectedAndroidTest   # UI/Instrumented test ها (نیاز به Emulator یا گوشی متصل)
+```
+
+---
+
+## نسخه‌های استفاده‌شده
+
+| ابزار | نسخه |
+|---|---|
+| Kotlin | 1.9.24 |
+| Android Gradle Plugin | 8.5.2 |
+| Gradle | 8.7 (`gradle/wrapper/gradle-wrapper.properties`) |
+| Compose BOM | 2024.06.00 |
+| Hilt | 2.51.1 |
+| Room | 2.6.1 |
+| Retrofit | 2.11.0 |
+| compileSdk / targetSdk | 34 |
+| minSdk | 26 (Android 8.0+) |
+
+همهٔ نسخه‌ها در `android/gradle/libs.versions.toml` متمرکز شده‌اند (Version Catalog) — برای ارتقا فقط همان‌جا را ویرایش کنید.
+
+---
+
+## ساختار ماژول‌ها
+
+```
+android/
+├── app/                  اپلیکیشن اصلی: Application، MainActivity، Splash، NavHost ریشه
+├── core/
+│   ├── common/           AppResult/AppError، UiState/UiEvent — بدون وابستگی به Android
+│   ├── designsystem/     رنگ‌ها/تایپوگرافی/کامپوننت‌های مشترک — دقیقاً برگرفته از Prototype
+│   ├── database/         Room: Entityها، DAOها، AppDatabase + الگوی Migration
+│   ├── datastore/        DataStore معمولی (تنظیمات) + EncryptedSharedPreferences (توکن‌ها)
+│   └── network/          Retrofit/OkHttp، AuthInterceptor، AuthApi
+└── feature/
+    ├── auth/             انتخاب نقش، ورود/ثبت‌نام Owner و Driver، FakeAuthRepository
+    ├── owner/             Dashboard، کامیون‌ها (با ویجت پلاک ایرانی)، رانندگان
+    └── driver/            Dashboard، کامیون من
+```
+
+هر Repository پشت یک Interface دامنه‌ای مخفی شده (Clean Architecture)، مطابق Phase 1 §9:
+`UI → ViewModel → Repository interface → (Fake یا Room-backed) implementation`.
+`FakeAuthRepository` را می‌توان با یک خط تغییر در `AuthModule.kt` با پیاده‌سازی واقعی Retrofit جایگزین کرد، بدون تغییر هیچ Composable یا ViewModel.
+
+---
+
+## چه چیزی در این فاز ساخته نشد (عمداً)
+
+طبق قانون مرحله‌ای Phase 2 (بخش ۳۱) و Phase 3:
+
+- ❌ منطق کامل حسابداری/تسویه (Accounting Engine) — فقط Entityهای دیتابیس آماده‌اند؛ Endpoint واقعی برای ثبت سرویس/هزینه/تسویه هنوز ساخته نشده (Phase 3 §27 صراحتاً اجازه داده این بخش‌ها Placeholder/صفر باشند).
+- ❌ سیستم پرداخت واقعی.
+- ❌ ویرایش «نحوهٔ محاسبهٔ حقوق راننده» از طریق Backend — این فقط در Room محلی است؛ Phase 3 برای این ویژگی Endpoint تعریف نکرد (در `feature/owner/data/DriverRepositoryImpl.kt` مستند شده).
+- ❌ Sync پیشرفتهٔ Offline کامل (WorkManager) — فقط الگوی Cache-با-تازه‌سازی ساده در TruckRepositoryImpl پیاده شده.
+
+---
+
+## Phase 3 — اتصال واقعی به Backend
+
+از این فاز به بعد، اپلیکیشن Android به‌جای `FakeAuthRepository`/داده‌های فقط-محلی، واقعاً با `backend/` صحبت می‌کند:
+
+- **Auth**: ثبت‌نام، ورود، خروج، و تازه‌سازی خودکار توکن (با `TokenAuthenticator` — وقتی یک درخواست ۴۰۱ بگیرد، خودش یک‌بار Refresh Token را امتحان می‌کند و درخواست را دوباره می‌فرستد؛ اگر آن هم شکست بخورد، یعنی نشست واقعاً تمام شده).
+- **کامیون‌ها**: Room همچنان هست ولی فقط به‌عنوان Cache؛ منبع حقیقت واقعی حالا Backend است.
+- **رانندگان و دعوت‌نامه**: دعوت واقعی از Backend کد می‌گیرد؛ راننده حالا یک صفحهٔ واقعی «دعوت‌نامه‌های من» دارد (در Dashboard راننده، بنر بالای صفحه) که می‌تواند دعوت را ببیند و بپذیرد — دقیقاً همان جریانی که در بخش ۴۳ خواسته شده.
+
+برای اتصال Android به یک نمونهٔ در حال اجرای Backend، در `android/core/network/build.gradle.kts` و `android/app/build.gradle.kts` مقدار `API_BASE_URL` را به آدرس واقعی سرورتان (یا `http://10.0.2.2:3000/` برای Emulator که به Backend روی همان کامپیوتر وصل می‌شود) تغییر دهید.
+
+---
+
+## ارتباط با HTML Prototype
+
+`docs/prototype/index.html` طبق قانون ۲۹ حذف نشده و هنوز مرجع رسمی UI/UX است. تفاوت‌های عمدی UI اندروید نسبت به Prototype:
+
+- **Splash**: در Prototype یک صفحهٔ HTML متحرک است؛ در اندروید از SplashScreen بومی سیستم‌عامل (`androidx.core.splashscreen`) استفاده شده که استاندارد و عملکرد بهتری دارد، و همان مدت "Check Session" را پوشش می‌دهد — یک صفحهٔ Compose جداگانه برای Splash ساخته نشد تا Splash دوتایی (native + Compose) ایجاد نشود.
+- **فونت Vazirmatn**: در HTML از Google Fonts بارگذاری می‌شد؛ در اندروید فایل فونت باید دستی اضافه شود (توضیح در `Type.kt`) — فعلاً از فونت پیش‌فرض سیستم استفاده می‌شود که فارسی را درست نمایش می‌دهد ولی ظاهر یکسانی با Prototype ندارد.
+
+باقی صفحات (انتخاب نقش، ورود/ثبت‌نام، Dashboard، کامیون‌ها با ویجت پلاک، رانندگان) مستقیماً از روی Prototype پیاده‌سازی شده‌اند.

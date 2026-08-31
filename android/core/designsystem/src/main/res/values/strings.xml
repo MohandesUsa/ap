@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cta_back">بازگشت</string>
+    <string name="cta_retry">تلاش دوباره</string>
+    <string name="state_loading">در حال بارگذاری…</string>
+    <string name="state_empty_generic">اطلاعاتی برای نمایش وجود ندارد.</string>
+    <string name="state_network_error">اتصال به سرور برقرار نشد.\nدوباره تلاش کنید.</string>
+</resources>

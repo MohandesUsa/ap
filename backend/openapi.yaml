@@ -1,0 +1,272 @@
+openapi: 3.0.3
+info:
+  title: TruckAccounting API
+  version: "0.1.0"
+  description: |
+    Backend API for TruckAccounting (Phase 3). Errors always follow the shape:
+    `{ "code": string, "message": string, "details": object }`.
+servers:
+  - url: http://localhost:3000
+    description: Local development
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Error:
+      type: object
+      properties:
+        code: { type: string, example: VALIDATION_ERROR }
+        message: { type: string, example: "اطلاعات وارد شده صحیح نیست" }
+        details: { type: object }
+    AuthResponse:
+      type: object
+      properties:
+        accessToken: { type: string }
+        refreshToken: { type: string }
+        userId: { type: string, format: uuid }
+        role: { type: string, enum: [owner, driver] }
+        fullName: { type: string }
+        phoneNumber: { type: string }
+        subscriptionStatus: { type: string, enum: [trial, active, expired] }
+        trialDaysLeft: { type: integer, nullable: true }
+    Truck:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        plate: { type: string, example: "22 الف 262 ایران 22" }
+        brand: { type: string }
+        modelYear: { type: string }
+
+paths:
+  /health:
+    get:
+      summary: Liveness check
+      responses:
+        "200": { description: OK }
+
+  /auth/register:
+    post:
+      summary: Register a new Owner or Driver account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phoneNumber, password, fullName, role]
+              properties:
+                phoneNumber: { type: string, example: "09121234567" }
+                password: { type: string, minLength: 6 }
+                fullName: { type: string }
+                role: { type: string, enum: [owner, driver] }
+                companyName: { type: string }
+      responses:
+        "201":
+          description: Account created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthResponse" }
+        "409": { description: Phone number already registered, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+        "422": { description: Validation error, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+
+  /auth/login:
+    post:
+      summary: Log in with phone number + password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phoneNumber, password]
+              properties:
+                phoneNumber: { type: string }
+                password: { type: string }
+      responses:
+        "200":
+          description: Logged in
+          content: { application/json: { schema: { $ref: "#/components/schemas/AuthResponse" } } }
+        "400": { description: Invalid credentials (deliberately identical for wrong-password and unknown-phone) }
+
+  /auth/refresh:
+    post:
+      summary: Exchange a valid refresh token for a new access+refresh token pair (rotation)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties: { refreshToken: { type: string } }
+      responses:
+        "200": { description: New token pair issued }
+        "401": { description: Refresh token invalid, expired, or already rotated/revoked }
+
+  /auth/logout:
+    post:
+      summary: Revoke all refresh tokens for the current user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties: { refreshToken: { type: string } }
+      responses:
+        "200": { description: Logged out }
+
+  /auth/me:
+    get:
+      summary: Current authenticated user
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200": { description: Current user }
+        "401": { description: Missing/invalid/expired access token }
+
+  /owners/me:
+    get:
+      summary: Owner's own profile
+      security: [{ bearerAuth: [] }]
+      responses: { "200": { description: OK }, "403": { description: Not an owner } }
+    put:
+      summary: Update owner's own profile
+      security: [{ bearerAuth: [] }]
+      responses: { "200": { description: Updated } }
+
+  /drivers/me:
+    get:
+      summary: Driver's own profile, including their currently connected truck (if any)
+      security: [{ bearerAuth: [] }]
+      responses: { "200": { description: OK }, "403": { description: Not a driver } }
+    put:
+      summary: Update driver's own profile
+      security: [{ bearerAuth: [] }]
+      responses: { "200": { description: Updated } }
+
+  /trucks:
+    get:
+      summary: List the authenticated owner's trucks
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { trucks: { type: array, items: { $ref: "#/components/schemas/Truck" } } }
+    post:
+      summary: Create a truck
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [plate, brand, modelYear]
+              properties:
+                plate: { type: string, description: "Format: NN <letter> NNN ایران PP" }
+                brand: { type: string }
+                modelYear: { type: string }
+      responses:
+        "201": { description: Created, content: { application/json: { schema: { $ref: "#/components/schemas/Truck" } } } }
+        "409": { description: Plate already registered }
+        "422": { description: Invalid plate format }
+
+  /trucks/{id}:
+    parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+    get:
+      summary: Get a truck by id (only if owned by the caller)
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200": { description: OK }
+        "404": { description: "Not found — returned both when the truck doesn't exist AND when it belongs to a different owner (Phase 3 §20)" }
+    put:
+      summary: Update a truck (only if owned by the caller)
+      security: [{ bearerAuth: [] }]
+      responses: { "200": { description: Updated }, "404": { description: Not found / not yours } }
+    delete:
+      summary: Soft-delete a truck (only if owned by the caller)
+      security: [{ bearerAuth: [] }]
+      responses: { "200": { description: Deleted }, "404": { description: Not found / not yours } }
+
+  /invitations:
+    post:
+      summary: Owner invites a driver by phone number, optionally pre-assigning a truck
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [driverPhone]
+              properties:
+                driverPhone: { type: string }
+                truckId: { type: string, format: uuid }
+      responses:
+        "201":
+          description: Invitation created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string }
+                  inviteCode: { type: string, example: "DRV-849251" }
+                  expiresAt: { type: string, format: date-time }
+
+  /owner/invitations:
+    get:
+      summary: List invitations the owner has sent
+      security: [{ bearerAuth: [] }]
+      responses: { "200": { description: OK } }
+
+  /driver/invitations:
+    get:
+      summary: List pending invitations addressed to the authenticated driver's phone number
+      security: [{ bearerAuth: [] }]
+      responses: { "200": { description: OK } }
+
+  /driver/invitations/{id}/accept:
+    parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+    post:
+      summary: Accept an invitation — creates the driver_trucks relationship if a truck was attached
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200": { description: Accepted }
+        "403": { description: "Invitation is not addressed to the caller's phone number" }
+        "404": { description: Not found }
+        "409": { description: Already used or expired }
+
+  /owner/drivers/{driverTruckId}:
+    parameters: [{ name: driverTruckId, in: path, required: true, schema: { type: string } }]
+    delete:
+      summary: Disconnect a driver from their truck (soft — end_date is set, history preserved)
+      security: [{ bearerAuth: [] }]
+      responses: { "200": { description: Disconnected } }
+
+  /drivers:
+    get:
+      summary: List drivers currently connected to any of the owner's trucks
+      security: [{ bearerAuth: [] }]
+      responses: { "200": { description: OK } }
+
+  /owner/dashboard:
+    get:
+      summary: Owner dashboard summary (financial fields are placeholders — Phase 3 §27)
+      security: [{ bearerAuth: [] }]
+      responses: { "200": { description: OK } }
+
+  /driver/dashboard:
+    get:
+      summary: Driver dashboard summary (financial fields are placeholders — Phase 3 §27)
+      security: [{ bearerAuth: [] }]
+      responses: { "200": { description: OK } }

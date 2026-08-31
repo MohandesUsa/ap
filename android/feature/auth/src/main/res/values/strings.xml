@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="role_select_title">شما چه کسی هستید؟</string>
+    <string name="role_select_subtitle">برای شروع، نقش خود را در برنامه انتخاب کنید</string>
+    <string name="role_owner_title">صاحب کامیون</string>
+    <string name="role_owner_desc">مدیریت کامیون، رانندگان و حساب‌ها</string>
+    <string name="role_driver_title">راننده</string>
+    <string name="role_driver_desc">ثبت کارکرد، سرویس‌ها و هزینه‌ها</string>
+
+    <string name="auth_tab_login">ورود</string>
+    <string name="auth_tab_register_owner">ثبت‌نام</string>
+    <string name="auth_tab_register_driver">ثبت‌نام با کد دعوت</string>
+    <string name="auth_login_title">ورود به حساب</string>
+    <string name="auth_register_title">ساخت حساب جدید</string>
+    <string name="auth_field_full_name">نام و نام خانوادگی</string>
+    <string name="auth_field_company">نام شرکت (اختیاری)</string>
+    <string name="auth_field_invite_code">کد دعوت</string>
+    <string name="auth_field_phone">شماره موبایل</string>
+    <string name="auth_field_password">رمز عبور</string>
+    <string name="auth_field_password_or_otp">رمز عبور / کد تأیید</string>
+    <string name="auth_cta_login">ورود</string>
+    <string name="auth_cta_register">ثبت‌نام</string>
+    <string name="auth_terms_notice">با ورود، قوانین استفاده را می‌پذیرید</string>
+    <string name="auth_owner_subtitle_login">برای مدیریت کامیون‌ها و رانندگان وارد شوید</string>
+    <string name="auth_owner_subtitle_register">برای مدیریت کامیون‌ها و رانندگان ثبت‌نام کنید</string>
+    <string name="auth_driver_subtitle_login">با شماره موبایل خود وارد شوید</string>
+    <string name="auth_driver_subtitle_register">با کد دعوتی که از صاحب کامیون گرفته‌اید ثبت‌نام کنید</string>
+</resources>

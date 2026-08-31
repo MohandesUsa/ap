@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="dashboard_title">داشبورد</string>
+    <string name="greeting_owner">سلام، صاحب کامیون 👋</string>
+    <string name="dashboard_summary_title">خلاصه وضعیت این ماه</string>
+    <string name="stat_my_trucks">کامیون‌های من</string>
+    <string name="stat_active_drivers">رانندگان فعال</string>
+    <string name="stat_income_month">درآمد این ماه</string>
+    <string name="stat_expense_month">هزینه این ماه</string>
+    <string name="stat_net_income">درآمد خالص</string>
+    <string name="stat_open_settlements">تسویه‌های انجام‌نشده</string>
+
+    <string name="trucks_title">کامیون‌های من</string>
+    <string name="trucks_long_press_hint">برای ویرایش یا حذف، روی هر کامیون کمی نگه دارید</string>
+    <string name="trucks_empty">هنوز کامیونی ثبت نشده است</string>
+    <string name="truck_add_title">افزودن کامیون</string>
+    <string name="truck_edit_title">ویرایش کامیون</string>
+    <string name="truck_field_plate">شماره پلاک</string>
+    <string name="truck_field_brand">برند</string>
+    <string name="truck_field_model_year">مدل (سال ساخت)</string>
+    <string name="truck_action_edit">ویرایش کامیون</string>
+    <string name="truck_action_delete">حذف کامیون</string>
+    <string name="truck_action_cancel">انصراف</string>
+    <string name="cta_save_truck">ثبت کامیون</string>
+    <string name="cta_add_truck">افزودن کامیون</string>
+    <string name="plate_country_label">ایران</string>
+
+    <string name="drivers_title">رانندگان</string>
+    <string name="drivers_empty">هنوز راننده‌ای ثبت نشده است</string>
+    <string name="driver_add_title">افزودن راننده</string>
+    <string name="driver_field_phone">شماره موبایل راننده</string>
+    <string name="driver_field_truck">اتصال به کامیون</string>
+    <string name="cta_send_invite">ارسال دعوت</string>
+    <string name="driver_pay_percent_label">%1$s%% از هر سرویس</string>
+    <string name="driver_pay_salary_label">حقوق ثابت ماهانه</string>
+</resources>

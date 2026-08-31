@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="driver_dashboard_title">داشبورد</string>
+    <string name="greeting_driver">سلام، راننده 👋</string>
+    <string name="driver_dashboard_summary">وضعیت این ماه</string>
+    <string name="driver_stat_trip_count">کارکرد این ماه</string>
+    <string name="driver_stat_income">درآمد ثبت‌شده</string>
+    <string name="driver_stat_expense">هزینه ثبت‌شده</string>
+    <string name="my_truck_title">کامیون من</string>
+    <string name="my_truck_not_connected">کامیونی متصل نیست</string>
+    <string name="my_truck_not_connected_desc">پس از پذیرفتن دعوت، اطلاعات کامیون اینجا نمایش داده می‌شود</string>
+    <string name="my_truck_brand">برند</string>
+    <string name="my_truck_model_year">مدل (سال ساخت)</string>
+    <string name="my_truck_plate">پلاک</string>
+    <string name="my_truck_owner">صاحب کامیون</string>
+    <string name="my_truck_connection_status">وضعیت اتصال</string>
+    <string name="my_truck_readonly_note">این بخش فقط اطلاعاتی است؛ ویرایش کامیون فقط توسط صاحب کامیون انجام می‌شود.</string>
+</resources>

@@ -1,0 +1,1637 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>TruckAccounting — Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-app: #EEF1F4;
+    --ink: #16212C;
+    --ink-soft: #5C6B7A;
+    --ink-faint: #93A1AC;
+    --surface: #FFFFFF;
+    --border: #DCE2E7;
+    --border-strong: #C4CDD5;
+
+    --owner: #D9721A;
+    --owner-dark: #B85E12;
+    --owner-tint: #FBEADA;
+
+    --driver: #0D8A82;
+    --driver-dark: #0A6E68;
+    --driver-tint: #DDF0EE;
+
+    --success: #2E8B57;
+    --success-tint: #E4F3EA;
+    --danger: #C0392B;
+    --danger-tint: #FBE7E5;
+    --pending: #C98A1B;
+    --pending-tint: #FBF0DC;
+
+    --radius-s: 10px;
+    --radius-m: 16px;
+    --radius-l: 22px;
+    --shadow: 0 1px 2px rgba(22,33,44,.04), 0 8px 24px rgba(22,33,44,.06);
+  }
+
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{margin:0; padding:0;}
+  body{
+    background: #D7DCE1;
+    font-family: 'Vazirmatn', sans-serif;
+    color: var(--ink);
+    min-height: 100vh;
+    display:flex; align-items:center; justify-content:center;
+    padding: 28px 12px;
+  }
+
+  /* ---------- Device frame ---------- */
+  .device{
+    width: 390px;
+    max-width: 100%;
+    height: 820px;
+    max-height: calc(100vh - 40px);
+    background: var(--bg-app);
+    border-radius: 40px;
+    border: 8px solid #0F1620;
+    box-shadow: 0 30px 60px rgba(0,0,0,.35), 0 4px 14px rgba(0,0,0,.15);
+    position: relative;
+    overflow: hidden;
+    display:flex; flex-direction:column;
+  }
+  .notch{
+    position:absolute; top:8px; left:50%; transform:translateX(-50%);
+    width:120px; height:22px; background:#0F1620; border-radius:0 0 16px 16px; z-index:50;
+  }
+  .statusbar{
+    height:38px; flex:0 0 auto; display:flex; align-items:center; justify-content:space-between;
+    padding: 0 22px; font-size:12px; font-weight:600; color: var(--ink); background: transparent; z-index:20;
+  }
+  .statusbar .icons{display:flex; gap:5px; align-items:center;}
+
+  .screens{ position:relative; flex:1 1 auto; overflow:hidden; }
+  .screen{
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    opacity:0; pointer-events:none; transform: translateY(6px);
+    transition: opacity .18s ease, transform .18s ease;
+    background: var(--bg-app);
+  }
+  .screen.active{ opacity:1; pointer-events:auto; transform: translateY(0); }
+
+  .screen-body{ flex:1 1 auto; overflow-y:auto; padding: 4px 18px 18px; }
+  .screen-body::-webkit-scrollbar{ width:0; }
+
+  /* ---------- App bar ---------- */
+  .appbar{
+    flex:0 0 auto; display:flex; align-items:center; gap:10px;
+    padding: 10px 14px 14px; min-height: 40px;
+  }
+  .appbar h1{ font-size:17px; font-weight:700; margin:0; flex:1; }
+  .icon-btn{
+    width:36px; height:36px; border-radius:12px; border:none; background: rgba(22,33,44,.06);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; flex:0 0 auto;
+    color: var(--ink);
+  }
+  .icon-btn:active{ background: rgba(22,33,44,.14); }
+  .appbar.on-owner .icon-btn.accent{ background: var(--owner-tint); color: var(--owner-dark); }
+  .appbar.on-driver .icon-btn.accent{ background: var(--driver-tint); color: var(--driver-dark); }
+
+  /* ---------- Splash ---------- */
+  .splash{ align-items:center; justify-content:center; }
+  .splash-inner{ text-align:center; padding: 0 30px; }
+  .road-scene{ width:220px; height:64px; margin:0 auto 8px; position:relative; overflow:hidden; }
+  .truck-drive{
+    position:absolute; bottom:14px; right:50%; width:76px; height:44px;
+    transform: translateX(50%);
+    animation: truckDrive 2.4s ease-in-out infinite;
+  }
+  @keyframes truckDrive{
+    0%   { transform: translateX(calc(50% + 130px)); opacity:0; }
+    12%  { opacity:1; }
+    50%  { transform: translateX(50%); }
+    88%  { opacity:1; }
+    100% { transform: translateX(calc(50% - 130px)); opacity:0; }
+  }
+  .truck-drive .wheel{ animation: wheelSpin .35s linear infinite; transform-box: fill-box; transform-origin: center; }
+  @keyframes wheelSpin{ to{ transform: rotate(-360deg); } }
+  .road-line{
+    width:100%; height:3px; border-radius:2px;
+    background-image: repeating-linear-gradient(90deg, var(--border-strong) 0 14px, transparent 14px 26px);
+    animation: roadMove .45s linear infinite;
+  }
+  @keyframes roadMove{ to{ background-position: -26px 0; } }
+  .splash-title{ font-size:26px; font-weight:800; letter-spacing:-.3px; margin:14px 0 6px; }
+  .splash-sub{ font-size:14px; color:var(--ink-soft); margin:0 0 30px; }
+  .splash-tap{ margin-top:34px; font-size:12px; color: var(--ink-faint); }
+
+  /* ---------- Role select ---------- */
+  .role-screen .screen-body{ display:flex; flex-direction:column; justify-content:center; gap:16px; padding-top:0; }
+  .role-heading{ text-align:center; margin-bottom: 10px; }
+  .role-heading h2{ font-size:20px; margin:0 0 6px; font-weight:800; }
+  .role-heading p{ font-size:13px; color:var(--ink-soft); margin:0; }
+  .role-card{
+    display:flex; align-items:center; gap:14px; padding:18px; border-radius: var(--radius-l);
+    background: var(--surface); border: 1.5px solid var(--border); cursor:pointer; text-align:right;
+    transition: border-color .15s, transform .1s;
+  }
+  .role-card:active{ transform: scale(.98); }
+  .role-card .emblem{
+    width:52px; height:52px; border-radius:16px; flex:0 0 auto; display:flex; align-items:center; justify-content:center;
+  }
+  .role-card.owner-card .emblem{ background: var(--owner-tint); color: var(--owner-dark); }
+  .role-card.driver-card .emblem{ background: var(--driver-tint); color: var(--driver-dark); }
+  .role-card.owner-card:hover, .role-card.owner-card:focus{ border-color: var(--owner); }
+  .role-card.driver-card:hover, .role-card.driver-card:focus{ border-color: var(--driver); }
+  .role-card .txt strong{ display:block; font-size:15.5px; font-weight:700; margin-bottom:2px; }
+  .role-card .txt span{ font-size:12.5px; color:var(--ink-soft); }
+
+  /* ---------- Auth ---------- */
+  .auth-hero{ padding: 6px 2px 22px; }
+  .auth-hero .badge{ display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; padding:6px 12px; border-radius:100px; }
+  .badge.owner{ background: var(--owner-tint); color: var(--owner-dark); }
+  .badge.driver{ background: var(--driver-tint); color: var(--driver-dark); }
+  .auth-hero h2{ font-size:21px; font-weight:800; margin: 12px 0 2px; }
+  .auth-hero p{ font-size:13px; color:var(--ink-soft); margin:0; }
+
+  .tabs{ display:flex; background:var(--surface); border:1px solid var(--border); border-radius: 100px; padding:4px; margin-bottom:18px; }
+  .tab{ flex:1; text-align:center; padding:9px 0; border-radius:100px; font-size:13.5px; font-weight:700; color:var(--ink-soft); cursor:pointer; border:none; background:transparent; }
+  .tab.active.for-owner{ background: var(--owner); color:#fff; }
+  .tab.active.for-driver{ background: var(--driver); color:#fff; }
+
+  .field{ margin-bottom:14px; }
+  .field label{ display:block; font-size:12.5px; font-weight:600; color:var(--ink-soft); margin-bottom:6px; }
+  .field input, .field select, .field textarea{
+    width:100%; border:1.5px solid var(--border); border-radius: var(--radius-s); padding:12px 14px;
+    font-family:inherit; font-size:14.5px; color:var(--ink); background:var(--surface);
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{ outline:none; border-color: var(--ink-faint); }
+  .field textarea{ resize:none; min-height:70px; }
+  .field-hint{ font-size:11.5px; color:var(--ink-faint); margin-top:5px; }
+
+  .btn{
+    display:flex; align-items:center; justify-content:center; gap:8px; width:100%; border:none;
+    border-radius: var(--radius-s); padding:14px; font-family:inherit; font-size:14.5px; font-weight:700;
+    cursor:pointer; color:#fff;
+  }
+  .btn:active{ transform: scale(.98); }
+  .btn.owner-btn{ background: var(--owner); }
+  .btn.driver-btn{ background: var(--driver); }
+  .btn.ghost{ background: transparent; color: var(--ink); border:1.5px solid var(--border); }
+  .btn.sm{ padding:10px; font-size:13px; }
+  .link-row{ text-align:center; margin-top:16px; font-size:13px; color: var(--ink-soft); }
+  .link-row a{ color: var(--ink); font-weight:700; text-decoration:none; }
+
+  /* ---------- Dashboard ---------- */
+  .greeting{ padding: 2px 2px 14px; }
+  .greeting .hello{ font-size:13px; color:var(--ink-soft); margin:0 0 2px; }
+  .greeting h2{ font-size:21px; font-weight:800; margin:0; }
+
+  .stat-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:18px; }
+  .stat-card{ background:var(--surface); border:1px solid var(--border); border-radius: var(--radius-m); padding:14px; }
+  .stat-card .num{ font-size:17px; font-weight:800; margin:2px 0; line-height:1.3; word-break:break-word; }
+  .stat-card .lbl{ font-size:12px; color:var(--ink-soft); }
+  .stat-card.wide{ grid-column: span 2; display:flex; align-items:center; justify-content:space-between; }
+  .stat-card.wide .num{ font-size:19px; word-break:break-word; }
+
+  .stat-card.combo{ display:flex; flex-direction:column; justify-content:center; gap:5px; padding:11px 14px; }
+  .stat-card.combo .combo-row{ display:flex; align-items:center; justify-content:space-between; gap:6px; }
+  .stat-card.combo .combo-row .lbl{ font-size:10.5px; flex:0 0 auto; }
+  .stat-card.combo .combo-row .num-sm{ font-size:11.5px; font-weight:800; text-align:left; direction:ltr; }
+
+  .money-row{
+    display:flex; align-items:center; justify-content:space-between; background:var(--surface);
+    border:1px solid var(--border); border-radius: var(--radius-m); padding:20px 18px; margin-bottom:10px;
+  }
+  .money-row .lbl{ font-size:14.5px; font-weight:600; color:var(--ink-soft); text-align:right; }
+  .money-row .val{ font-size:21px; font-weight:800; direction:ltr; text-align:left; }
+
+  .section-title{ display:flex; align-items:center; justify-content:space-between; margin: 20px 0 10px; }
+  .section-title h3{ font-size:14.5px; font-weight:800; margin:0; }
+  .section-title .more{ font-size:12px; color:var(--ink-soft); cursor:pointer; }
+
+  .quick-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:6px; }
+  .quick{ background:var(--surface); border:1px solid var(--border); border-radius: var(--radius-m); padding:12px 4px; text-align:center; cursor:pointer; }
+  .quick .qicon{ width:34px; height:34px; margin:0 auto 6px; border-radius:10px; display:flex; align-items:center; justify-content:center; }
+  .quick span{ font-size:10.5px; font-weight:600; color:var(--ink-soft); display:block; }
+  .quick:active{ background: rgba(22,33,44,.04); }
+
+  /* ---------- Lists ---------- */
+  .list-item{
+    display:flex; align-items:center; gap:12px; background:var(--surface); border:1px solid var(--border);
+    border-radius: var(--radius-m); padding:13px; margin-bottom:10px; cursor:default;
+  }
+  .list-item .avatar{ width:44px; height:44px; border-radius:13px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; }
+  .list-item .meta{ flex:1; min-width:0; }
+  .list-item .meta strong{ display:block; font-size:14.5px; font-weight:700; margin-bottom:2px; }
+  .list-item .meta span{ font-size:12px; color: var(--ink-soft); display:block; }
+  .list-item .side{ text-align:left; flex:0 0 auto; }
+  .list-item .amount{ font-size:14px; font-weight:800; }
+  .list-item .amount.pos{ color: var(--success); }
+  .list-item .amount.neg{ color: var(--danger); }
+
+  .status-pill{ font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:100px; display:inline-block; }
+  .status-pill.active{ background: var(--success-tint); color: var(--success); }
+  .status-pill.pending{ background: var(--pending-tint); color: var(--pending); }
+  .status-pill.settled{ background: var(--success-tint); color: var(--success); }
+
+  .empty-state{ text-align:center; padding: 40px 20px; color: var(--ink-faint); }
+  .empty-state .eicon{ margin-bottom:10px; }
+  .empty-state p{ font-size:13px; margin:0; }
+
+  .fab-row{ position:sticky; bottom:0; padding-top:8px; background: linear-gradient(180deg, transparent, var(--bg-app) 40%); }
+
+  /* ---------- Cards / forms ---------- */
+  .card{ background:var(--surface); border:1px solid var(--border); border-radius: var(--radius-l); padding:16px; margin-bottom:14px; }
+  .card.settled{ background: var(--success-tint); border-color: rgba(46,139,87,.3); }
+  .card h4{ margin:0 0 12px; font-size:14.5px; font-weight:800; }
+  .row-between{ display:flex; align-items:center; justify-content:space-between; }
+  .kv{ display:flex; align-items:center; justify-content:space-between; padding:9px 0; border-bottom:1px dashed var(--border); font-size:13.5px; }
+  .kv:last-child{ border-bottom:none; }
+  .kv .k{ color: var(--ink-soft); }
+  .kv .v{ font-weight:700; }
+
+  .form-grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:0 10px; }
+
+  .invite-code-box{
+    text-align:center; background: var(--owner-tint); border: 1.5px dashed var(--owner); border-radius: var(--radius-m);
+    padding:20px; margin: 18px 0;
+  }
+  .invite-code-box .code{ font-size:24px; font-weight:800; letter-spacing:2px; color: var(--owner-dark); direction:ltr; }
+  .invite-code-box .lbl{ font-size:12px; color: var(--ink-soft); margin-bottom:8px; }
+
+  /* ---------- Iranian plate input ---------- */
+  .plate-input{ display:flex; align-items:stretch; gap:6px; direction:ltr; }
+  .plate-flag{
+    flex:0 0 auto; width:52px; background:#2F6FED; border-radius:10px; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:3px; padding:6px 2px; color:#fff;
+  }
+  .plate-flag span{ font-size:9px; font-weight:800; line-height:1.15; text-align:center; }
+  .plate-box{
+    flex:1; min-width:0; background: var(--bg-app); border:1.5px solid var(--border); border-radius:10px;
+    display:flex; align-items:center; justify-content:center; position:relative;
+  }
+  input.plate-box{ text-align:center; font-size:16px; font-weight:800; color:var(--ink); font-family:inherit; padding:0 2px; }
+  .plate-box-letter select{
+    width:100%; height:100%; border:none; background:transparent; text-align:center; font-size:15px; font-weight:800;
+    color:var(--ink); font-family:inherit; appearance:none; -webkit-appearance:none; padding:0 16px 0 4px; direction:rtl;
+  }
+  .plate-box-letter select:focus{ outline:none; }
+  .plate-box-letter svg{ position:absolute; left:6px; top:50%; transform:translateY(-50%); pointer-events:none; }
+  .plate-box-province{ flex-direction:column; padding:6px 2px; gap:2px; }
+  .plate-province-lbl{ font-size:9.5px; font-weight:700; color:var(--ink-soft); }
+  .plate-box-province input{ width:100%; border:none; background:transparent; text-align:center; font-size:14px; font-weight:800; color:var(--ink); font-family:inherit; padding:0; }
+  .plate-box-province input:focus{ outline:none; }
+  .plate-input input:focus{ outline:none; border-color: var(--owner); }
+
+  .route-visual{ display:flex; align-items:center; gap:8px; margin: 4px 0 16px; }
+  .route-visual .pt{ width:10px; height:10px; border-radius:50%; flex:0 0 auto; }
+  .route-visual .pt.a{ background: var(--driver); }
+  .route-visual .pt.b{ background: var(--owner); }
+  .route-visual .ln{ flex:1; height:0; border-top:2px dashed var(--border-strong); }
+  .route-visual .lbl{ font-size:13px; font-weight:700; }
+
+  .toggle-row{ display:flex; gap:8px; margin-bottom:14px; }
+  .toggle-chip{ flex:1; text-align:center; padding:10px 4px; border-radius: var(--radius-s); border:1.5px solid var(--border); font-size:12.5px; font-weight:700; color:var(--ink-soft); cursor:pointer; }
+  .toggle-chip.sel.for-owner{ border-color: var(--owner); background: var(--owner-tint); color: var(--owner-dark); }
+  .toggle-chip.sel.for-driver{ border-color: var(--driver); background: var(--driver-tint); color: var(--driver-dark); }
+
+  /* ---------- Settlement ---------- */
+  .settle-hero{ text-align:center; padding: 20px 10px; border-radius: var(--radius-l); margin-bottom:16px; color:#fff; }
+  .settle-hero.for-owner{ background: linear-gradient(135deg, var(--owner), var(--owner-dark)); }
+  .settle-hero.for-driver{ background: linear-gradient(135deg, var(--driver), var(--driver-dark)); }
+  .settle-hero .lbl{ font-size:12.5px; opacity:.85; margin-bottom:4px; }
+  .settle-hero .num{ font-size:30px; font-weight:800; }
+
+  /* ---------- More menu ---------- */
+  .more-item{ display:flex; align-items:center; gap:12px; padding:14px 4px; border-bottom:1px solid var(--border); cursor:pointer; }
+  .more-item:last-child{ border-bottom:none; }
+  .more-item .mi-icon{ width:36px; height:36px; border-radius:11px; background: rgba(22,33,44,.05); display:flex; align-items:center; justify-content:center; flex:0 0 auto; }
+  .more-item span{ font-size:14px; font-weight:600; flex:1; }
+  .profile-head{ display:flex; align-items:center; gap:12px; padding: 10px 4px 20px; }
+  .profile-head .pav{ width:56px; height:56px; border-radius:18px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:18px; color:#fff; }
+  .profile-head strong{ display:block; font-size:16px; }
+  .profile-head span{ font-size:12.5px; color:var(--ink-soft); }
+
+  /* ---------- Bottom nav ---------- */
+  .bottomnav{
+    flex:0 0 auto; display:flex; background:var(--surface); border-top:1px solid var(--border);
+    padding: 8px 6px calc(8px + env(safe-area-inset-bottom,0px));
+  }
+  .navbtn{ flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; background:none; border:none; cursor:pointer; padding:4px 0; color: var(--ink-faint); }
+  .navbtn span{ font-size:10.5px; font-weight:600; }
+  .navbtn.active.for-owner{ color: var(--owner-dark); }
+  .navbtn.active.for-driver{ color: var(--driver-dark); }
+
+  .toast{
+    position:absolute; bottom:88px; left:50%; transform: translateX(-50%) translateY(10px); z-index:80;
+    background: var(--ink); color:#fff; font-size:13px; font-weight:600; padding:11px 18px; border-radius:100px;
+    box-shadow: var(--shadow); opacity:0; pointer-events:none; transition: opacity .2s, transform .2s;
+    white-space:nowrap;
+  }
+  .toast.show{ opacity:1; transform: translateX(-50%) translateY(0); }
+
+  .hairline-note{ display:flex; gap:10px; align-items:flex-start; background: var(--driver-tint); border-radius: var(--radius-m); padding:12px 14px; margin-bottom:16px; font-size:12.5px; color: var(--driver-dark); line-height:1.9; }
+
+  /* ---------- Bottom action sheet (long-press menus) ---------- */
+  .sheet-backdrop{
+    position:absolute; inset:0; background:rgba(15,22,32,.4); z-index:90;
+    display:flex; align-items:flex-end; opacity:0; pointer-events:none; transition: opacity .18s;
+  }
+  .sheet-backdrop.show{ opacity:1; pointer-events:auto; }
+  .sheet{
+    width:100%; background:var(--surface); border-radius:22px 22px 0 0; padding:8px 16px calc(14px + env(safe-area-inset-bottom,0px));
+    transform: translateY(100%); transition: transform .22s ease;
+  }
+  .sheet-backdrop.show .sheet{ transform: translateY(0); }
+  .sheet-btn{
+    display:flex; align-items:center; gap:10px; width:100%; text-align:right; padding:15px 4px; border:none;
+    background:none; font-family:inherit; font-size:14.5px; font-weight:600; color:var(--ink);
+    border-bottom:1px solid var(--border); cursor:pointer;
+  }
+  .sheet-btn:last-child{ border-bottom:none; }
+  .sheet-btn.danger{ color:var(--danger); }
+  .sheet-btn.cancel{ color:var(--ink-soft); font-weight:700; justify-content:center; margin-top:2px; }
+  .press-item{ user-select:none; -webkit-user-select:none; cursor:pointer; }
+
+  .below-frame{ position:fixed; bottom:10px; left:50%; transform:translateX(-50%); font-size:12px; color:#5C6B7A; text-align:center; width:100%; }
+  @media (max-width:460px){ .below-frame{ display:none; } }
+</style>
+</head>
+<body>
+
+<div class="device" id="device">
+  <div class="notch"></div>
+  <div class="statusbar">
+    <span id="clock">9:41</span>
+    <div class="icons">
+      <svg width="14" height="10" viewBox="0 0 14 10"><rect x="0" y="6" width="2.4" height="4" fill="#16212C"/><rect x="3.6" y="4" width="2.4" height="6" fill="#16212C"/><rect x="7.2" y="2" width="2.4" height="8" fill="#16212C"/><rect x="10.8" y="0" width="2.4" height="10" fill="#16212C"/></svg>
+      <svg width="16" height="11" viewBox="0 0 16 11"><rect x="0.5" y="0.5" width="21" height="10" rx="2.5" fill="none" stroke="#16212C"/><rect x="2" y="2" width="15" height="7" rx="1.3" fill="#16212C"/></svg>
+    </div>
+  </div>
+
+  <div class="screens">
+
+    <!-- SPLASH -->
+    <section class="screen splash active" data-screen="splash">
+      <div class="screen-body splash-body" style="display:flex;align-items:center;justify-content:center;">
+        <div class="splash-inner">
+          <div class="road-scene">
+            <svg class="truck-drive" viewBox="0 0 100 46" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <ellipse cx="50" cy="41" rx="38" ry="3" fill="#000" opacity=".12"/>
+              <rect x="4" y="10" width="20" height="20" rx="3" fill="var(--owner-dark)"/>
+              <path d="M6 14a2 2 0 0 1 2-2h9v14H6V14Z" fill="#fff" opacity=".18"/>
+              <rect x="24" y="16" width="46" height="14" rx="2" fill="var(--owner)"/>
+              <rect x="24" y="16" width="46" height="4" rx="2" fill="#fff" opacity=".2"/>
+              <circle class="wheel" cx="18" cy="34" r="7" fill="#1F2A33"/>
+              <circle cx="18" cy="34" r="2.4" fill="#fff"/>
+              <circle class="wheel" cx="60" cy="34" r="7" fill="#1F2A33"/>
+              <circle cx="60" cy="34" r="2.4" fill="#fff"/>
+            </svg>
+          </div>
+          <div class="road-line"></div>
+          <h1 class="splash-title">حسابدار کامیون</h1>
+          <p class="splash-sub">TruckAccounting — مدیریت مشترک صاحب کامیون و راننده</p>
+          <div class="splash-tap" onclick="goRoot('role-select')">برای ادامه ضربه بزنید</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SUBSCRIPTION PAYWALL (shown when free trial has ended) -->
+    <section class="screen" data-screen="paywall">
+      <div class="screen-body" style="display:flex;flex-direction:column;justify-content:center;padding:0 26px;text-align:center">
+        <div id="pw-icon" style="width:64px;height:64px;border-radius:20px;margin:0 auto 18px;display:flex;align-items:center;justify-content:center">${ICON.wallet}</div>
+        <h2 style="font-size:19px;font-weight:800;margin:0 0 8px">دورهٔ رایگان یک‌ماهه به پایان رسید</h2>
+        <p style="font-size:13px;color:var(--ink-soft);line-height:1.9;margin:0 0 22px" id="pw-desc">برای ادامهٔ استفاده از برنامه، لطفاً اشتراک سالانهٔ خود را تهیه کنید.</p>
+        <div class="card" style="text-align:right;margin-bottom:18px">
+          <div class="kv"><span class="k">نوع اشتراک</span><span class="v">سالانه</span></div>
+          <div class="kv"><span class="k">هزینه اشتراک</span><span class="v" id="pw-price">—</span></div>
+        </div>
+        <button class="btn" id="pw-buy-btn" onclick="purchaseSubscription()">${ICON.check}خرید اشتراک سالانه</button>
+        <button class="btn ghost sm" style="margin-top:10px" onclick="goRoot('role-select')">خروج از حساب</button>
+      </div>
+    </section>
+
+    <!-- ROLE SELECT -->
+    <section class="screen role-screen" data-screen="role-select">
+      <div class="appbar"><div style="flex:1"></div></div>
+      <div class="screen-body">
+        <div class="role-heading">
+          <h2>شما چه کسی هستید؟</h2>
+          <p>برای شروع، نقش خود را در برنامه انتخاب کنید</p>
+        </div>
+        <div class="role-card owner-card" onclick="goRoot('owner-auth')">
+          <div class="emblem">${ICON.truck}</div>
+          <div class="txt"><strong>صاحب کامیون</strong><span>مدیریت کامیون، رانندگان و حساب‌ها</span></div>
+        </div>
+        <div class="role-card driver-card" onclick="goRoot('driver-auth')">
+          <div class="emblem">${ICON.driver}</div>
+          <div class="txt"><strong>راننده</strong><span>ثبت کارکرد، سرویس‌ها و هزینه‌ها</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- OWNER AUTH -->
+    <section class="screen" data-screen="owner-auth">
+      <div class="appbar"><button class="icon-btn" onclick="goRoot('role-select')">${ICON.back}</button><div style="flex:1"></div></div>
+      <div class="screen-body">
+        <div class="auth-hero">
+          <span class="badge owner">${ICON.truck}صاحب کامیون</span>
+          <h2 id="owner-auth-title">ساخت حساب جدید</h2>
+          <p>برای مدیریت کامیون‌ها و رانندگان ثبت‌نام کنید</p>
+        </div>
+        <div class="tabs">
+          <button class="tab for-owner" onclick="setAuthTab('owner','login')">ورود</button>
+          <button class="tab for-owner active" onclick="setAuthTab('owner','register')">ثبت‌نام</button>
+        </div>
+        <div id="owner-register-fields" style="display:block">
+          <div class="field"><label>نام و نام خانوادگی</label><input type="text" placeholder="مثلاً محمد احمدی"></div>
+          <div class="field"><label>نام شرکت (اختیاری)</label><input type="text" placeholder="نام شرکت حمل‌ونقل"></div>
+        </div>
+        <div class="field"><label>شماره موبایل</label><input type="tel" placeholder="09xxxxxxxxx" dir="ltr" style="text-align:left"></div>
+        <div class="field"><label id="owner-pass-label">رمز عبور</label><input type="password" placeholder="••••••••"></div>
+        <button class="btn owner-btn" onclick="ownerLogin()">${ICON.check}<span id="owner-auth-cta">ثبت‌نام</span></button>
+        <div class="link-row">با ورود، <a href="javascript:void(0)">قوانین استفاده</a> را می‌پذیرید</div>
+      </div>
+    </section>
+
+    <!-- OWNER DASHBOARD -->
+    <section class="screen" data-screen="owner-dashboard">
+      <div class="appbar on-owner">
+        <h1>داشبورد</h1>
+        <button class="icon-btn accent" onclick="goTo('owner-profile')">${ICON.user}</button>
+      </div>
+      <div class="screen-body">
+        <div class="greeting"><p class="hello">سلام، صاحب کامیون 👋</p><h2>خلاصه وضعیت این ماه</h2></div>
+
+        <div class="stat-grid">
+          <div class="stat-card"><div class="lbl">کامیون‌های من</div><div class="num" id="dash-truck-count">2</div></div>
+          <div class="stat-card"><div class="lbl">رانندگان فعال</div><div class="num" id="dash-driver-count">1</div></div>
+        </div>
+
+        <div class="money-row"><span class="lbl">درآمد این ماه</span><span class="val" id="dash-income" style="color:var(--success)">0</span></div>
+        <div class="money-row"><span class="lbl">هزینه این ماه</span><span class="val" id="dash-expense" style="color:var(--danger)">0</span></div>
+        <div class="money-row"><span class="lbl">درآمد خالص</span><span class="val" id="dash-net" style="color:var(--success)">0</span></div>
+
+        <div class="stat-grid">
+          <div class="stat-card wide">
+            <div><div class="lbl">تسویه‌های انجام‌نشده</div><div class="num" id="dash-pending">1 مورد</div></div>
+            <button class="btn owner-btn sm" style="width:auto;padding:9px 16px" onclick="goTab('owner-settlement')">مشاهده</button>
+          </div>
+        </div>
+
+        <div class="section-title"><h3>دسترسی سریع</h3></div>
+        <div class="quick-grid">
+          <div class="quick" onclick="goTab('owner-trucks')"><div class="qicon" style="background:var(--owner-tint);color:var(--owner-dark)">${ICON.truck}</div><span>کامیون‌ها</span></div>
+          <div class="quick" onclick="goTab('owner-drivers')"><div class="qicon" style="background:var(--owner-tint);color:var(--owner-dark)">${ICON.driver}</div><span>رانندگان</span></div>
+          <div class="quick" onclick="goTab('owner-trips')"><div class="qicon" style="background:var(--owner-tint);color:var(--owner-dark)">${ICON.route}</div><span>سرویس‌ها</span></div>
+          <div class="quick" onclick="goTab('owner-income')"><div class="qicon" style="background:var(--owner-tint);color:var(--owner-dark)">${ICON.income}</div><span>درآمدها</span></div>
+          <div class="quick" onclick="goTab('owner-expenses')"><div class="qicon" style="background:var(--owner-tint);color:var(--owner-dark)">${ICON.expense}</div><span>هزینه‌ها</span></div>
+          <div class="quick" onclick="goTab('owner-settlement')"><div class="qicon" style="background:var(--owner-tint);color:var(--owner-dark)">${ICON.wallet}</div><span>تسویه</span></div>
+          <div class="quick" onclick="goTab('owner-more')"><div class="qicon" style="background:var(--owner-tint);color:var(--owner-dark)">${ICON.report}</div><span>گزارش‌ها</span></div>
+          <div class="quick" onclick="goTab('owner-more')"><div class="qicon" style="background:var(--owner-tint);color:var(--owner-dark)">${ICON.settings}</div><span>تنظیمات</span></div>
+        </div>
+
+        <div class="section-title"><h3>آخرین سرویس‌ها</h3><span class="more" onclick="goTab('owner-trips')">همه</span></div>
+        <div id="dash-recent-trips"></div>
+      </div>
+      ${bottomNav('owner','owner-dashboard')}
+    </section>
+
+    <!-- OWNER TRUCKS -->
+    <section class="screen" data-screen="owner-trucks">
+      <div class="appbar on-owner"><button class="icon-btn" onclick="goTab('owner-dashboard')">${ICON.back}</button><h1>کامیون‌های من</h1><div style="width:36px"></div></div>
+      <div class="screen-body">
+        <p style="font-size:11.5px;color:var(--ink-faint);margin:0 0 12px">برای ویرایش یا حذف، روی هر کامیون کمی نگه دارید.</p>
+        <div id="trucks-list"></div>
+        <div class="fab-row"><button class="btn owner-btn" onclick="openAddTruck()">${ICON.plus}افزودن کامیون</button></div>
+      </div>
+      ${bottomNav('owner','owner-trucks')}
+    </section>
+
+    <!-- OWNER ADD TRUCK -->
+    <section class="screen" data-screen="owner-add-truck">
+      <div class="appbar on-owner"><button class="icon-btn" onclick="goBack()">${ICON.back}</button><h1 id="af-title">افزودن کامیون</h1><div style="width:36px"></div></div>
+      <div class="screen-body">
+        <div class="field">
+          <label>شماره پلاک</label>
+          <div class="plate-input">
+            <div class="plate-flag">
+              <svg width="22" height="15" viewBox="0 0 22 15"><rect width="22" height="5" fill="#279B48"/><rect y="5" width="22" height="5" fill="#fff"/><rect y="10" width="22" height="5" fill="#DA0000"/></svg>
+              <span>IR<br>Iran</span>
+            </div>
+            <input id="af-plate-2" class="plate-box plate-box-num2" type="text" inputmode="numeric" maxlength="2" placeholder="22">
+            <div class="plate-box plate-box-letter">
+              <select id="af-plate-letter">
+                <option value="">حرف</option>
+                <option>الف</option><option>ب</option><option>پ</option><option>ت</option><option>ث</option>
+                <option>ج</option><option>د</option><option>ز</option><option>س</option><option>ش</option>
+                <option>ص</option><option>ط</option><option>ع</option><option>ف</option><option>ق</option>
+                <option>ک</option><option>گ</option><option>ل</option><option>م</option><option>ن</option>
+                <option>و</option><option>ه</option><option>ی</option>
+              </select>
+              ${ICON.chev}
+            </div>
+            <input id="af-plate-3" class="plate-box plate-box-num3" type="text" inputmode="numeric" maxlength="3" placeholder="262">
+            <div class="plate-box plate-box-province">
+              <span class="plate-province-lbl">ایران</span>
+              <input id="af-plate-province" type="text" inputmode="numeric" maxlength="2" placeholder="22">
+            </div>
+          </div>
+        </div>
+        <div class="field"><label>برند</label><input id="af-brand" type="text" placeholder="ولوو"></div>
+        <div class="field"><label>مدل (سال ساخت)</label><input id="af-model" type="text" inputmode="numeric" placeholder="1401"></div>
+        <button class="btn owner-btn" id="af-submit-btn" onclick="submitAddTruck()">${ICON.check}ثبت کامیون</button>
+      </div>
+    </section>
+
+    <!-- TRUCK ACTION SHEET (long-press) -->
+    <div class="sheet-backdrop" id="truck-action-sheet" onclick="closeTruckActions()">
+      <div class="sheet" onclick="event.stopPropagation()">
+        <button class="sheet-btn" onclick="editTruckAction()">${ICON.edit}ویرایش کامیون</button>
+        <button class="sheet-btn danger" onclick="deleteTruckAction()">${ICON.trash}حذف کامیون</button>
+        <button class="sheet-btn cancel" onclick="closeTruckActions()">انصراف</button>
+      </div>
+    </div>
+
+    <!-- OWNER DRIVERS -->
+    <section class="screen" data-screen="owner-drivers">
+      <div class="appbar on-owner"><button class="icon-btn" onclick="goTab('owner-dashboard')">${ICON.back}</button><h1>رانندگان</h1><div style="width:36px"></div></div>
+      <div class="screen-body">
+        <div id="drivers-list"></div>
+        <div class="fab-row"><button class="btn owner-btn" onclick="goTo('owner-invite')">${ICON.plus}افزودن راننده</button></div>
+      </div>
+      ${bottomNav('owner','owner-drivers')}
+    </section>
+
+    <!-- OWNER INVITE -->
+    <section class="screen" data-screen="owner-invite">
+      <div class="appbar on-owner"><button class="icon-btn" onclick="goBack()">${ICON.back}</button><h1>دعوت راننده</h1><div style="width:36px"></div></div>
+      <div class="screen-body">
+        <p style="font-size:13px;color:var(--ink-soft);margin:0 0 16px">شماره موبایل راننده را وارد کنید؛ یک کد دعوت ساخته می‌شود که راننده برای اتصال به کامیون از آن استفاده می‌کند.</p>
+        <div class="field"><label>شماره موبایل راننده</label><input id="inv-phone" type="tel" placeholder="09xxxxxxxxx" dir="ltr" style="text-align:left"></div>
+        <div class="field"><label>اتصال به کامیون</label>
+          <select id="inv-truck"></select>
+        </div>
+        <button class="btn owner-btn" onclick="sendInvite()">${ICON.check}ارسال دعوت</button>
+        <div id="invite-result" style="display:none">
+          <div class="invite-code-box">
+            <div class="lbl">کد دعوت راننده</div>
+            <div class="code" id="invite-code-val">DRV-000000</div>
+          </div>
+          <button class="btn ghost sm" onclick="finishInvite()">باشه، متوجه شدم</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- DRIVER PAY DETAIL (owner) -->
+    <section class="screen" data-screen="driver-detail">
+      <div class="appbar on-owner"><button class="icon-btn" onclick="goTab('owner-drivers')">${ICON.back}</button><h1>حقوق راننده</h1><div style="width:36px"></div></div>
+      <div class="screen-body">
+        <div class="profile-head"><div class="pav" style="background:var(--owner)" id="dd-avatar">ع</div><div><strong id="dd-name">—</strong><span id="dd-truck">—</span></div></div>
+        <div class="card">
+          <h4>نحوهٔ محاسبهٔ حقوق</h4>
+          <p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 12px">راننده در قسمت خودش می‌بیند که حقوقش درصدی است یا ماهیانه.</p>
+          <div class="toggle-row">
+            <div class="toggle-chip sel for-owner" data-paytype="percent" onclick="selectPayType('percent')">درصدی از هر سرویس</div>
+            <div class="toggle-chip for-owner" data-paytype="salary" onclick="selectPayType('salary')">حقوق ماهیانه</div>
+          </div>
+          <div id="dd-percent-field" class="field" style="margin-top:14px">
+            <label>درصد راننده از هر سرویس (%)</label>
+            <input id="dd-percent-value" type="text" inputmode="numeric" placeholder="20">
+            <div class="field-hint">این درصد از (مبلغ کل بارنامه منهای کمیسیون بارنامه) محاسبه می‌شود.</div>
+          </div>
+          <div id="dd-salary-field" class="field" style="margin-top:14px;display:none">
+            <label id="dd-salary-label">مبلغ حقوق ماهانه (ریال)</label>
+            <input id="dd-salary-value" type="text" inputmode="numeric" placeholder="45,000,000">
+          </div>
+        </div>
+        <button class="btn owner-btn" onclick="saveDriverPay()">${ICON.check}ذخیرهٔ تنظیمات حقوق</button>
+      </div>
+    </section>
+
+    <!-- OWNER TRIPS -->
+    <section class="screen" data-screen="owner-trips">
+      <div class="appbar on-owner"><button class="icon-btn" onclick="goTab('owner-dashboard')">${ICON.back}</button><h1>سرویس‌ها</h1><div style="width:36px"></div></div>
+      <div class="screen-body"><div id="owner-trips-list"></div></div>
+      ${bottomNav('owner','owner-trips')}
+    </section>
+
+    <!-- OWNER INCOME -->
+    <section class="screen" data-screen="owner-income">
+      <div class="appbar on-owner"><button class="icon-btn" onclick="goTab('owner-dashboard')">${ICON.back}</button><h1>درآمدها</h1><div style="width:36px"></div></div>
+      <div class="screen-body">
+        <div class="stat-card wide" style="margin-bottom:16px"><div><div class="lbl">مجموع درآمد این ماه</div><div class="num" id="owner-income-total" style="color:var(--success)">0 تومان</div></div></div>
+        <div id="owner-income-list"></div>
+      </div>
+      ${bottomNav('owner','owner-income')}
+    </section>
+
+    <!-- OWNER EXPENSES -->
+    <section class="screen" data-screen="owner-expenses">
+      <div class="appbar on-owner"><button class="icon-btn" onclick="goTab('owner-dashboard')">${ICON.back}</button><h1>هزینه‌ها</h1><div style="width:36px"></div></div>
+      <div class="screen-body">
+        <div class="stat-card wide" style="margin-bottom:16px"><div><div class="lbl">مجموع هزینه این ماه</div><div class="num" id="owner-expense-total" style="color:var(--danger)">0 تومان</div></div></div>
+        <div id="owner-expenses-list"></div>
+      </div>
+      ${bottomNav('owner','owner-expenses')}
+    </section>
+
+    <!-- OWNER SETTLEMENT -->
+    <section class="screen" data-screen="owner-settlement">
+      <div class="appbar on-owner"><button class="icon-btn" onclick="goTab('owner-dashboard')">${ICON.back}</button><h1>تسویه حساب</h1><div style="width:36px"></div></div>
+      <div class="screen-body">
+        <div class="settle-hero for-owner"><div class="lbl">مانده قابل پرداخت به راننده</div><div class="num" id="owner-settle-amount">0</div></div>
+        <div class="card">
+          <div class="row-between" style="margin-bottom:10px"><h4 style="margin:0" id="settle-owner-share-label">حقوق راننده</h4><button class="btn ghost sm" style="width:auto;padding:6px 12px" onclick="openDriverDetail(store.drivers[0] && store.drivers[0].id)">تغییر</button></div>
+          <div class="kv"><span class="k">درآمد کل سرویس‌ها</span><span class="v" id="settle-owner-income">0</span></div>
+          <div class="kv"><span class="k">هزینه‌های ثبت‌شده</span><span class="v" id="settle-owner-expense">0</span></div>
+          <div class="kv"><span class="k">حقوق محاسبه‌شدهٔ راننده</span><span class="v" id="settle-owner-share">0</span></div>
+          <div class="kv"><span class="k">قبلاً مستقیماً به‌حساب راننده واریز شده</span><span class="v" id="settle-owner-paid-direct">0</span></div>
+        </div>
+
+        <div class="section-title"><h3>وضعیت تسویهٔ سرویس‌ها</h3></div>
+        <p style="font-size:11.5px;color:var(--ink-faint);margin:-4px 0 12px">برای هر سرویس مشخص کنید تسویه شده یا نه، و پول بارنامه به حساب چه کسی واریز شده است.</p>
+        <div id="owner-settlement-trips-list"></div>
+
+        <div class="card">
+          <h4>پرداخت‌های دستی ثبت‌شده</h4>
+          <div id="owner-payments-list"><p style="font-size:12.5px;color:var(--ink-faint);margin:0">هنوز پرداختی ثبت نشده است.</p></div>
+        </div>
+        <button class="btn owner-btn" onclick="recordPayment('owner')">${ICON.check}ثبت پرداخت جدید</button>
+      </div>
+      ${bottomNav('owner','owner-settlement')}
+    </section>
+
+    <!-- OWNER MORE -->
+    <section class="screen" data-screen="owner-more">
+      <div class="appbar on-owner"><button class="icon-btn" onclick="goTab('owner-dashboard')">${ICON.back}</button><h1>پروفایل و تنظیمات</h1><div style="width:36px"></div></div>
+      <div class="screen-body">
+        <div class="profile-head"><div class="pav" style="background:var(--owner)">ص</div><div><strong>صاحب کامیون</strong><span>0912xxxxxxx</span></div></div>
+        <div class="card" style="padding:4px 12px">
+          <div class="more-item"><div class="mi-icon">${ICON.report}</div><span>گزارش‌های مالی</span>${ICON.chev}</div>
+          <div class="more-item" onclick="goTo('owner-profile')"><div class="mi-icon">${ICON.user}</div><span>ویرایش پروفایل</span>${ICON.chev}</div>
+          <div class="more-item" onclick="goTo('owner-settings')"><div class="mi-icon">${ICON.settings}</div><span>تنظیمات برنامه</span>${ICON.chev}</div>
+          <div class="more-item" onclick="goRoot('role-select')"><div class="mi-icon" style="background:var(--danger-tint);color:var(--danger)">${ICON.logout}</div><span style="color:var(--danger)">خروج از حساب</span></div>
+        </div>
+      </div>
+      ${bottomNav('owner','owner-more')}
+    </section>
+
+    <!-- OWNER PROFILE -->
+    <section class="screen" data-screen="owner-profile">
+      <div class="appbar on-owner"><button class="icon-btn" onclick="goBack()">${ICON.back}</button><h1>پروفایل من</h1><div style="width:36px"></div></div>
+      <div class="screen-body">
+        <div class="profile-head"><div class="pav" style="background:var(--owner)">ص</div><div><strong>صاحب کامیون</strong><span>0912xxxxxxx</span></div></div>
+        <div class="card">
+          <h4>اطلاعات حساب</h4>
+          <div class="field"><label>نام و نام خانوادگی</label><input id="op-name" type="text" value="صاحب کامیون"></div>
+          <div class="field"><label>نام شرکت (اختیاری)</label><input id="op-company" type="text" placeholder="نام شرکت حمل‌ونقل"></div>
+          <div class="field" style="margin-bottom:0"><label>شماره موبایل</label><input id="op-phone" type="tel" value="0912xxxxxxx" dir="ltr" style="text-align:left"></div>
+        </div>
+        <div class="card">
+          <div class="row-between" style="margin-bottom:10px"><h4 style="margin:0">اشتراک</h4><span class="status-pill active" id="op-sub-badge">دورهٔ رایگان</span></div>
+          <div class="kv"><span class="k">وضعیت</span><span class="v" id="op-sub-status">یک ماه رایگان</span></div>
+          <div class="kv"><span class="k">باقی‌مانده تا پایان دورهٔ رایگان</span><span class="v" id="op-sub-remaining">30 روز</span></div>
+          <div class="kv"><span class="k">هزینه اشتراک سالانه</span><span class="v" id="op-sub-price">—</span></div>
+          <p style="font-size:11.5px;color:var(--ink-faint);margin:10px 0 0;line-height:1.9">${ICON.info}پس از پایان یک‌ماه استفادهٔ رایگان، برای ادامهٔ استفاده باید اشتراک سالانه تهیه شود.</p>
+        </div>
+        <button class="btn owner-btn" onclick="toast('تغییرات پروفایل ذخیره شد')">${ICON.check}ذخیره تغییرات</button>
+      </div>
+    </section>
+
+    <!-- OWNER SETTINGS -->
+    <section class="screen" data-screen="owner-settings">
+      <div class="appbar on-owner"><button class="icon-btn" onclick="goTab('owner-more')">${ICON.back}</button><h1>تنظیمات برنامه</h1><div style="width:36px"></div></div>
+      <div class="screen-body">
+        <div class="card">
+          <h4>واحد پول</h4>
+          <p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 12px">درآمدها، هزینه‌ها و تسویه‌حساب در سراسر برنامه با این واحد نمایش داده می‌شوند. پیش‌فرض: ریال.</p>
+          <div class="toggle-row">
+            <div class="toggle-chip for-owner" data-currency="toman" onclick="setCurrency('toman')">تومان</div>
+            <div class="toggle-chip sel for-owner" data-currency="rial" onclick="setCurrency('rial')">ریال</div>
+          </div>
+        </div>
+        <div class="card" style="border-style:dashed;border-color:var(--border-strong)">
+          <h4>ابزار تست</h4>
+          <p style="font-size:11.5px;color:var(--ink-faint);margin:0 0 12px;line-height:1.9">این دکمه فقط برای آزمایش رفتار برنامه است و در نسخهٔ نهایی وجود نخواهد داشت؛ چون یک ماه واقعی نمی‌تواند در این پیش‌نمایش سپری شود.</p>
+          <button class="btn ghost sm" onclick="simulateTrialEnd('owner')">شبیه‌سازی پایان دورهٔ رایگان</button>
+        </div>
+      </div>
+      ${bottomNav('owner','owner-more')}
+    </section>
+
+    <!-- DRIVER AUTH -->
+    <section class="screen" data-screen="driver-auth">
+      <div class="appbar"><button class="icon-btn" onclick="goRoot('role-select')">${ICON.back}</button><div style="flex:1"></div></div>
+      <div class="screen-body">
+        <div class="auth-hero">
+          <span class="badge driver">${ICON.driver}راننده</span>
+          <h2 id="driver-auth-title">ساخت حساب جدید</h2>
+          <p>با کد دعوتی که از صاحب کامیون گرفته‌اید ثبت‌نام کنید</p>
+        </div>
+        <div class="tabs">
+          <button class="tab for-driver" onclick="setAuthTab('driver','login')">ورود</button>
+          <button class="tab for-driver active" onclick="setAuthTab('driver','register')">ثبت‌نام با کد دعوت</button>
+        </div>
+        <div id="driver-register-fields" style="display:block">
+          <div class="field"><label>نام و نام خانوادگی</label><input type="text" placeholder="مثلاً علی رضایی"></div>
+          <div class="field"><label>کد دعوت</label><input type="text" placeholder="DRV-849251" dir="ltr" style="text-align:left"></div>
+        </div>
+        <div class="field"><label>شماره موبایل</label><input type="tel" placeholder="09xxxxxxxxx" dir="ltr" style="text-align:left"></div>
+        <div class="field"><label id="driver-pass-label">رمز عبور</label><input type="password" placeholder="••••••••"></div>
+        <button class="btn driver-btn" onclick="driverLogin()">${ICON.check}<span id="driver-auth-cta">ثبت‌نام</span></button>
+        <div class="link-row">با ورود، <a href="javascript:void(0)">قوانین استفاده</a> را می‌پذیرید</div>
+      </div>
+    </section>
+
+    <!-- DRIVER DASHBOARD -->
+    <section class="screen" data-screen="driver-dashboard">
+      <div class="appbar on-driver">
+        <h1>داشبورد</h1>
+        <button class="icon-btn accent" onclick="goTo('driver-profile')">${ICON.user}</button>
+      </div>
+      <div class="screen-body">
+        <div class="greeting"><p class="hello">سلام، علی 👋</p><h2>وضعیت این ماه</h2></div>
+        <div class="card" style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+          <div class="emblem" style="width:46px;height:46px;border-radius:14px;background:var(--driver-tint);color:var(--driver-dark);display:flex;align-items:center;justify-content:center">${ICON.truck}</div>
+          <div style="flex:1"><strong style="display:block;font-size:14.5px">ولوو — مدل 1401</strong><span style="font-size:12px;color:var(--ink-soft)">پلاک: 22 الف 262 ایران 22</span></div>
+          <button class="icon-btn" onclick="goTab('driver-truck')">${ICON.chev}</button>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-card"><div class="lbl">کارکرد این ماه</div><div class="num" id="ddash-trip-count">0 سرویس</div></div>
+          <div class="stat-card"><div class="lbl">درآمد ثبت‌شده</div><div class="num" id="ddash-income" style="color:var(--success)">0</div></div>
+          <div class="stat-card"><div class="lbl">هزینه ثبت‌شده</div><div class="num" id="ddash-expense" style="color:var(--danger)">0</div></div>
+          <div class="stat-card"><div class="lbl">وضعیت تسویه</div><div class="num" style="font-size:14px">در انتظار</div></div>
+        </div>
+        <div class="section-title"><h3>دسترسی سریع</h3></div>
+        <div class="quick-grid">
+          <div class="quick" onclick="goTo('trip-add')"><div class="qicon" style="background:var(--driver-tint);color:var(--driver-dark)">${ICON.route}</div><span>ثبت سرویس</span></div>
+          <div class="quick" onclick="goTo('expense-add')"><div class="qicon" style="background:var(--driver-tint);color:var(--driver-dark)">${ICON.expense}</div><span>ثبت هزینه</span></div>
+          <div class="quick" onclick="goTab('driver-income')"><div class="qicon" style="background:var(--driver-tint);color:var(--driver-dark)">${ICON.income}</div><span>درآمد</span></div>
+          <div class="quick" onclick="goTab('driver-settlement')"><div class="qicon" style="background:var(--driver-tint);color:var(--driver-dark)">${ICON.wallet}</div><span>تسویه</span></div>
+        </div>
+        <div class="section-title"><h3>آخرین سرویس‌ها</h3><span class="more" onclick="goTab('driver-trips')">همه</span></div>
+        <div id="ddash-recent-trips"></div>
+      </div>
+      ${bottomNav('driver','driver-dashboard')}
+    </section>
+
+    <!-- DRIVER TRUCK -->
+    <section class="screen" data-screen="driver-truck">
+      <div class="appbar on-driver"><button class="icon-btn" onclick="goTab('driver-dashboard')">${ICON.back}</button><h1>کامیون من</h1><div style="width:36px"></div></div>
+      <div class="screen-body">
+        <div class="card">
+          <div style="text-align:center;padding:10px 0 18px">
+            <div style="width:64px;height:64px;border-radius:20px;background:var(--driver-tint);color:var(--driver-dark);display:flex;align-items:center;justify-content:center;margin:0 auto 10px">${ICON.truck}</div>
+            <strong style="font-size:17px;display:block">ولوو</strong>
+            <span style="font-size:12.5px;color:var(--ink-soft)">پلاک: 22 الف 262 ایران 22</span>
+          </div>
+          <div class="kv"><span class="k">برند</span><span class="v">ولوو</span></div>
+          <div class="kv"><span class="k">مدل (سال ساخت)</span><span class="v">1401</span></div>
+          <div class="kv"><span class="k">پلاک</span><span class="v">22 الف 262 ایران 22</span></div>
+          <div class="kv"><span class="k">صاحب کامیون</span><span class="v">صاحب کامیون</span></div>
+          <div class="kv"><span class="k">وضعیت اتصال</span><span class="v"><span class="status-pill active">متصل و فعال</span></span></div>
+        </div>
+        <div class="hairline-note">${ICON.info}این بخش فقط اطلاعاتی است؛ ویرایش کامیون فقط توسط صاحب کامیون انجام می‌شود.</div>
+      </div>
+      ${bottomNav('driver','driver-truck')}
+    </section>
+
+    <!-- DRIVER TRIPS -->
+    <section class="screen" data-screen="driver-trips">
+      <div class="appbar on-driver"><button class="icon-btn" onclick="goTab('driver-dashboard')">${ICON.back}</button><h1>سرویس‌ها</h1><div style="width:36px"></div></div>
+      <div class="screen-body">
+        <div id="driver-trips-list"></div>
+        <div class="fab-row"><button class="btn driver-btn" onclick="goTo('trip-add')">${ICON.plus}ثبت سرویس جدید</button></div>
+      </div>
+      ${bottomNav('driver','driver-trips')}
+    </section>
+
+    <!-- TRIP ADD (shared, driver) -->
+    <section class="screen" data-screen="trip-add">
+      <div class="appbar on-driver"><button class="icon-btn" onclick="goBack()">${ICON.back}</button><h1>ثبت سرویس</h1><div style="width:36px"></div></div>
+      <div class="screen-body">
+        <div class="form-grid-2">
+          <div class="field"><label>مبدا</label><input id="tf-origin" type="text" placeholder="تهران"></div>
+          <div class="field"><label>مقصد</label><input id="tf-dest" type="text" placeholder="اصفهان"></div>
+        </div>
+        <div class="route-visual"><span class="pt a"></span><div class="ln"></div><span class="pt b"></span></div>
+        <div class="form-grid-2">
+          <div class="field"><label>نوع بار</label><input id="tf-cargo" type="text" placeholder="مصالح ساختمانی"></div>
+          <div class="field"><label>وزن بار (تن)</label><input id="tf-weight" type="text" inputmode="numeric" placeholder="18"></div>
+        </div>
+        <div class="field"><label id="tf-income-label">درآمد سرویس (ریال)</label><input id="tf-income" type="text" inputmode="numeric" placeholder="85,000,000"></div>
+        <div class="field"><label>تاریخ</label><input id="tf-date" type="text" placeholder="1403/06/10"></div>
+        <div class="field"><label>توضیحات (اختیاری)</label><textarea id="tf-desc" placeholder="یادداشت دربارهٔ سرویس..."></textarea></div>
+        <button class="btn driver-btn" onclick="submitTrip()">${ICON.check}ثبت سرویس</button>
+      </div>
+    </section>
+
+    <!-- TRIP DETAIL (read-only) -->
+    <section class="screen" data-screen="trip-detail">
+      <div class="appbar"><button class="icon-btn" onclick="goBack()">${ICON.back}</button><h1>جزئیات سرویس</h1><div style="width:36px"></div></div>
+      <div class="screen-body">
+        <div class="card">
+          <h4>مشخصات سرویس</h4>
+          <div class="route-visual" style="margin-bottom:14px"><span class="pt a"></span><div class="ln"></div><span class="pt b"></span></div>
+          <div class="kv"><span class="k">مبدا</span><span class="v" id="td-origin">—</span></div>
+          <div class="kv"><span class="k">مقصد</span><span class="v" id="td-dest">—</span></div>
+          <div class="kv"><span class="k">نوع بار</span><span class="v" id="td-cargo">—</span></div>
+          <div class="kv"><span class="k">وزن بار</span><span class="v" id="td-weight">—</span></div>
+          <div class="kv"><span class="k">درآمد سرویس (مبلغ کل بارنامه)</span><span class="v" id="td-income">—</span></div>
+          <div class="kv"><span class="k">تاریخ</span><span class="v" id="td-date">—</span></div>
+          <div class="kv"><span class="k">شمارهٔ سرویس</span><span class="v" id="td-id">—</span></div>
+        </div>
+        <div class="card">
+          <h4>توضیحات راننده</h4>
+          <p style="font-size:13px;color:var(--ink-soft);margin:0;line-height:1.9" id="td-desc">—</p>
+        </div>
+        <div class="card">
+          <h4>وضعیت تسویه</h4>
+          <div class="kv"><span class="k">کمیسیون بارنامه</span><span class="v" id="td-commission">—</span></div>
+          <div class="kv"><span class="k">سهم راننده از این سرویس</span><span class="v" id="td-share" style="color:var(--success)">—</span></div>
+          <div class="kv"><span class="k">وضعیت</span><span class="v" id="td-settled">—</span></div>
+          <div class="kv"><span class="k">واریزی به</span><span class="v" id="td-paidto">—</span></div>
+        </div>
+        <div class="hairline-note">${ICON.info}اطلاعات مسیر و بار را راننده هنگام ثبت سرویس وارد کرده و قابل ویرایش نیست؛ وضعیت تسویه فقط توسط صاحب کامیون از صفحهٔ تسویه حساب تغییر می‌کند.</div>
+      </div>
+    </section>
+
+    <!-- EXPENSE ADD (shared) -->
+    <section class="screen" data-screen="expense-add">
+      <div class="appbar on-driver"><button class="icon-btn" onclick="goBack()">${ICON.back}</button><h1>ثبت هزینه</h1><div style="width:36px"></div></div>
+      <div class="screen-body">
+        <div class="field"><label>نوع هزینه</label>
+          <div class="toggle-row" id="exp-cat-row">
+            <div class="toggle-chip sel for-driver" data-cat="سوخت" onclick="pickCat(this)">سوخت</div>
+            <div class="toggle-chip for-driver" data-cat="تعمیرات" onclick="pickCat(this)">تعمیرات</div>
+            <div class="toggle-chip for-driver" data-cat="عوارض" onclick="pickCat(this)">عوارض</div>
+            <div class="toggle-chip for-driver" data-cat="سایر" onclick="pickCat(this)">سایر</div>
+          </div>
+        </div>
+        <div class="field"><label id="ef-amount-label">مبلغ (ریال)</label><input id="ef-amount" type="text" inputmode="numeric" placeholder="12,000,000"></div>
+        <div class="field"><label>تاریخ</label><input id="ef-date" type="text" placeholder="1403/06/10"></div>
+        <div class="field"><label>توضیحات</label><textarea id="ef-desc" placeholder="مثلاً سوخت‌گیری در پمپ بنزین جادهٔ قم"></textarea></div>
+        <div class="field"><label>رسید (اختیاری)</label>
+          <div class="btn ghost" style="cursor:pointer" onclick="mockAttach()">${ICON.receipt}<span id="ef-receipt-lbl">افزودن عکس رسید</span></div>
+        </div>
+        <button class="btn driver-btn" onclick="submitExpense()">${ICON.check}ثبت هزینه</button>
+      </div>
+    </section>
+
+    <!-- DRIVER INCOME -->
+    <section class="screen" data-screen="driver-income">
+      <div class="appbar on-driver"><button class="icon-btn" onclick="goTab('driver-dashboard')">${ICON.back}</button><h1>درآمد</h1><div style="width:36px"></div></div>
+      <div class="screen-body">
+        <div class="stat-card wide" style="margin-bottom:16px"><div><div class="lbl">مجموع درآمدهای ثبت‌شده</div><div class="num" id="driver-income-total" style="color:var(--success)">0 تومان</div></div></div>
+        <div id="driver-income-list"></div>
+      </div>
+      ${bottomNav('driver','driver-income')}
+    </section>
+
+    <!-- DRIVER EXPENSES -->
+    <section class="screen" data-screen="driver-expenses">
+      <div class="appbar on-driver"><button class="icon-btn" onclick="goTab('driver-dashboard')">${ICON.back}</button><h1>هزینه‌ها</h1><div style="width:36px"></div></div>
+      <div class="screen-body">
+        <div id="driver-expenses-list"></div>
+        <div class="fab-row"><button class="btn driver-btn" onclick="goTo('expense-add')">${ICON.plus}ثبت هزینه جدید</button></div>
+      </div>
+      ${bottomNav('driver','driver-expenses')}
+    </section>
+
+    <!-- DRIVER SETTLEMENT -->
+    <section class="screen" data-screen="driver-settlement">
+      <div class="appbar on-driver"><button class="icon-btn" onclick="goTab('driver-dashboard')">${ICON.back}</button><h1>تسویه حساب</h1><div style="width:36px"></div></div>
+      <div class="screen-body">
+        <div class="settle-hero for-driver"><div class="lbl">مانده قابل دریافت شما</div><div class="num" id="driver-settle-amount">0</div></div>
+        <div class="card">
+          <h4 id="settle-driver-share-label" style="margin-bottom:10px">حقوق شما</h4>
+          <div class="kv"><span class="k">درآمد کل سرویس‌ها</span><span class="v" id="settle-driver-income">0</span></div>
+          <div class="kv"><span class="k">هزینه‌های ثبت‌شده</span><span class="v" id="settle-driver-expense">0</span></div>
+          <div class="kv"><span class="k">حقوق محاسبه‌شدهٔ شما</span><span class="v" id="settle-driver-share">0</span></div>
+          <div class="kv"><span class="k">قبلاً مستقیماً به‌حساب شما واریز شده</span><span class="v" id="settle-driver-paid-direct">0</span></div>
+        </div>
+
+        <div class="section-title"><h3>وضعیت تسویهٔ سرویس‌ها</h3></div>
+        <div id="driver-settlement-trips-list"></div>
+
+        <div class="card">
+          <h4>پرداخت‌های دستی ثبت‌شده</h4>
+          <div id="driver-payments-list"><p style="font-size:12.5px;color:var(--ink-faint);margin:0">هنوز پرداختی ثبت نشده است.</p></div>
+        </div>
+        <div class="hairline-note">${ICON.info}ثبت پرداخت و مشخص‌کردن وضعیت تسویهٔ هر سرویس فقط توسط صاحب کامیون انجام می‌شود؛ این صفحه برای شما فقط نمایشی است.</div>
+      </div>
+      ${bottomNav('driver','driver-settlement')}
+    </section>
+
+    <!-- DRIVER MORE -->
+    <section class="screen" data-screen="driver-more">
+      <div class="appbar on-driver"><button class="icon-btn" onclick="goTab('driver-dashboard')">${ICON.back}</button><h1>پروفایل و تنظیمات</h1><div style="width:36px"></div></div>
+      <div class="screen-body">
+        <div class="profile-head"><div class="pav" style="background:var(--driver)">ع</div><div><strong>علی رضایی</strong><span>0935xxxxxxx</span></div></div>
+        <div class="card" style="padding:4px 12px">
+          <div class="more-item" onclick="goTo('driver-profile')"><div class="mi-icon">${ICON.user}</div><span>ویرایش پروفایل</span>${ICON.chev}</div>
+          <div class="more-item" onclick="goTo('driver-settings')"><div class="mi-icon">${ICON.settings}</div><span>تنظیمات برنامه</span>${ICON.chev}</div>
+          <div class="more-item" onclick="goRoot('role-select')"><div class="mi-icon" style="background:var(--danger-tint);color:var(--danger)">${ICON.logout}</div><span style="color:var(--danger)">خروج از حساب</span></div>
+        </div>
+      </div>
+      ${bottomNav('driver','driver-more')}
+    </section>
+
+    <!-- DRIVER PROFILE -->
+    <section class="screen" data-screen="driver-profile">
+      <div class="appbar on-driver"><button class="icon-btn" onclick="goBack()">${ICON.back}</button><h1>پروفایل من</h1><div style="width:36px"></div></div>
+      <div class="screen-body">
+        <div class="profile-head"><div class="pav" style="background:var(--driver)">ع</div><div><strong>علی رضایی</strong><span>0935xxxxxxx</span></div></div>
+        <div class="card">
+          <h4>اطلاعات حساب</h4>
+          <div class="field"><label>نام و نام خانوادگی</label><input id="dp-name" type="text" value="علی رضایی"></div>
+          <div class="field" style="margin-bottom:0"><label>شماره موبایل</label><input id="dp-phone" type="tel" value="0935xxxxxxx" dir="ltr" style="text-align:left"></div>
+        </div>
+        <div class="card">
+          <div class="row-between" style="margin-bottom:10px"><h4 style="margin:0">اشتراک</h4><span class="status-pill active" id="dp-sub-badge">دورهٔ رایگان</span></div>
+          <div class="kv"><span class="k">وضعیت</span><span class="v" id="dp-sub-status">یک ماه رایگان</span></div>
+          <div class="kv"><span class="k">باقی‌مانده تا پایان دورهٔ رایگان</span><span class="v" id="dp-sub-remaining">30 روز</span></div>
+          <div class="kv"><span class="k">هزینه اشتراک سالانه</span><span class="v" id="dp-sub-price">—</span></div>
+          <p style="font-size:11.5px;color:var(--ink-faint);margin:10px 0 0;line-height:1.9">${ICON.info}پس از پایان یک‌ماه استفادهٔ رایگان، برای ادامهٔ استفاده باید اشتراک سالانهٔ خودتان را تهیه کنید.</p>
+        </div>
+        <button class="btn driver-btn" onclick="toast('تغییرات پروفایل ذخیره شد')">${ICON.check}ذخیره تغییرات</button>
+      </div>
+    </section>
+
+    <!-- DRIVER SETTINGS -->
+    <section class="screen" data-screen="driver-settings">
+      <div class="appbar on-driver"><button class="icon-btn" onclick="goTab('driver-more')">${ICON.back}</button><h1>تنظیمات برنامه</h1><div style="width:36px"></div></div>
+      <div class="screen-body">
+        <div class="card">
+          <h4>واحد پول</h4>
+          <p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 12px">درآمدها، هزینه‌ها و تسویه‌حساب در سراسر برنامه با این واحد نمایش داده می‌شوند. پیش‌فرض: ریال.</p>
+          <div class="toggle-row">
+            <div class="toggle-chip for-driver" data-currency="toman" onclick="setCurrency('toman')">تومان</div>
+            <div class="toggle-chip sel for-driver" data-currency="rial" onclick="setCurrency('rial')">ریال</div>
+          </div>
+        </div>
+        <div class="card" style="border-style:dashed;border-color:var(--border-strong)">
+          <h4>ابزار تست</h4>
+          <p style="font-size:11.5px;color:var(--ink-faint);margin:0 0 12px;line-height:1.9">این دکمه فقط برای آزمایش رفتار برنامه است و در نسخهٔ نهایی وجود نخواهد داشت؛ چون یک ماه واقعی نمی‌تواند در این پیش‌نمایش سپری شود.</p>
+          <button class="btn ghost sm" onclick="simulateTrialEnd('driver')">شبیه‌سازی پایان دورهٔ رایگان</button>
+        </div>
+      </div>
+      ${bottomNav('driver','driver-more')}
+    </section>
+
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+<div class="below-frame">Prototype — TruckAccounting · Phase 1</div>
+
+<script>
+const ICON = {
+  truck: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 16V7a1 1 0 0 1 1-1h9v10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M13 10h4.2a1 1 0 0 1 .8.4l2 2.6a1 1 0 0 1 .2.6V16h-2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7" cy="17" r="1.8" stroke="currentColor" stroke-width="1.7"/><circle cx="17" cy="17" r="1.8" stroke="currentColor" stroke-width="1.7"/></svg>`,
+  driver: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="1.7"/><path d="M5 19.5c1.4-3.2 4-4.8 7-4.8s5.6 1.6 7 4.8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>`,
+  back: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M14.5 6 8.5 12l6 6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  chev: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9.5 6 15.5 12l-6 6" stroke="var(--ink-faint)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  menu: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+  user: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="1.8"/><path d="M5 19.5c1.4-3.2 4-4.8 7-4.8s5.6 1.6 7 4.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+  plus: `<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>`,
+  check: `<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M5 13l4.5 4.5L19 8" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  route: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="6" cy="6" r="2.2" stroke="currentColor" stroke-width="1.7"/><circle cx="18" cy="18" r="2.2" stroke="currentColor" stroke-width="1.7"/><path d="M8 7c2 1 3 2 4 4s2 3 4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-dasharray="2.4 2.4"/></svg>`,
+  income: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 17 10 11l4 4 6-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 8h5v5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  expense: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="4" y="6" width="16" height="12" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M4 10h16" stroke="currentColor" stroke-width="1.7"/></svg>`,
+  wallet: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="6.5" width="17" height="12" rx="2.2" stroke="currentColor" stroke-width="1.7"/><path d="M14.5 12.5h3" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>`,
+  report: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 19V9M12 19V5M19 19v-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+  settings: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.7"/><path d="M12 3v2.4M12 18.6V21M21 12h-2.4M5.4 12H3M18 6l-1.6 1.6M7.6 16.4 6 18M18 18l-1.6-1.6M7.6 7.6 6 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>`,
+  logout: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3M14 8l4 4-4 4M18 12H8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  receipt: `<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 8h6M9 12h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>`,
+  info: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="flex:0 0 auto;margin-top:1px"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M12 11v5.5M12 8v.1" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>`,
+  edit: `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" style="flex:0 0 auto"><path d="M4 20h4.2L18.8 9.4a1.5 1.5 0 0 0 0-2.1l-2.1-2.1a1.5 1.5 0 0 0-2.1 0L4 15.8V20Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M13.5 6.5l4 4" stroke="currentColor" stroke-width="1.6"/></svg>`,
+  trash: `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" style="flex:0 0 auto"><path d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-8 0 1 13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1l1-13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+};
+
+function bottomNav(role, active){
+  const items = role==='owner'
+    ? [['owner-dashboard','داشبورد', navIcon('home')],['owner-trucks','کامیون‌ها', navIcon('truck')],['owner-drivers','رانندگان', navIcon('driver')],['owner-more','بیشتر', navIcon('menu')]]
+    : [['driver-dashboard','داشبورد', navIcon('home')],['driver-trips','سرویس‌ها', navIcon('route')],['driver-expenses','هزینه‌ها', navIcon('expense')],['driver-more','بیشتر', navIcon('menu')]];
+  return `<div class="bottomnav">` + items.map(([id,label,icon])=>
+    `<button class="navbtn ${id===active?'active for-'+role:''}" onclick="goTab('${id}')">${icon}<span>${label}</span></button>`
+  ).join('') + `</div>`;
+}
+function navIcon(name){
+  const map = {
+    home:`<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 11.5 12 4l8 7.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 10v9h12v-9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+    truck: ICON.truck.replace(/width="22" height="22"/,'width="20" height="20"'),
+    driver: ICON.driver.replace(/width="22" height="22"/,'width="20" height="20"'),
+    route: ICON.route,
+    expense: ICON.expense,
+    menu: ICON.menu.replace('18','20')
+  };
+  return map[name];
+}
+</script>
+
+<script>
+/* Hydrate ${...} placeholders that live in the static markup (icons, bottomNav()).
+   Scoped strictly to .screens so it never touches the JS inside <script> tags. */
+(function hydrate(){
+  const el = document.querySelector('.screens');
+  el.innerHTML = el.innerHTML.replace(/\$\{([^}]+)\}/g, (m, expr) => {
+    try { return eval(expr); } catch(e){ console.error('hydrate error:', expr, e); return ''; }
+  });
+})();
+
+/* ---------------- Navigation ---------------- */
+let navStack = ['splash'];
+
+function render(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el = document.querySelector(`.screen[data-screen="${id}"]`);
+  if(el) el.classList.add('active');
+  window.scrollTo(0,0);
+  const body = el && el.querySelector('.screen-body');
+  if(body) body.scrollTop = 0;
+}
+function goTo(id){ navStack.push(id); render(id); }
+function goRoot(id){ navStack = [id]; render(id); }
+function goTab(id){ navStack = [id]; render(id); } // bottom-nav / dashboard destinations reset the stack, like Android tab switches
+function goBack(){
+  if(navStack.length > 1){ navStack.pop(); render(navStack[navStack.length-1]); }
+}
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+function fa(n){ return String(n).replace(/[0-9]/g, d=>'0123456789'[d]); }
+let currencyUnit = 'rial'; // 'rial' | 'toman' — default per project requirement: amounts show in Rial by default
+function unitLabel(){ return currencyUnit === 'rial' ? 'ریال' : 'تومان'; }
+function toDisplayUnit(nToman){ return currencyUnit === 'rial' ? nToman * 10 : nToman; } // stored amounts are in Toman; ×10 for Rial
+function fromDisplayUnit(nEntered){ return currencyUnit === 'rial' ? Math.round(nEntered / 10) : nEntered; } // convert a form-entered amount back to Toman for storage
+function money(n){ return fa(toDisplayUnit(n).toLocaleString('en-US')) + ' ' + unitLabel(); }
+function amt(n){ return fa(toDisplayUnit(n).toLocaleString('en-US')); }
+function applyCurrencyLabels(){
+  document.getElementById('tf-income-label').textContent = `درآمد سرویس (${unitLabel()})`;
+  document.getElementById('ef-amount-label').textContent = `مبلغ (${unitLabel()})`;
+  document.getElementById('dd-salary-label').textContent = `مبلغ حقوق ماهانه (${unitLabel()})`;
+}
+function setCurrency(unit){
+  currencyUnit = unit;
+  document.querySelectorAll('.toggle-chip[data-currency]').forEach(c=>c.classList.toggle('sel', c.dataset.currency===unit));
+  applyCurrencyLabels();
+  renderAll();
+  toast(unit==='rial' ? 'واحد پول به ریال تغییر کرد' : 'واحد پول به تومان تغییر کرد');
+}
+
+/* ---------------- Auth tabs ---------------- */
+function setAuthTab(role, mode){
+  document.querySelectorAll(`.tab.for-${role}`).forEach(t=>t.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  const isRegister = mode==='register';
+  document.getElementById(`${role}-register-fields`).style.display = isRegister ? 'block':'none';
+  document.getElementById(`${role}-auth-title`).textContent = isRegister ? 'ساخت حساب جدید' : 'ورود به حساب';
+  document.getElementById(`${role}-auth-cta`).textContent = isRegister ? 'ثبت‌نام' : 'ورود';
+  document.getElementById(`${role}-pass-label`).textContent = isRegister ? 'رمز عبور' : 'رمز عبور / کد تأیید';
+}
+/* ---------------- Free trial & subscription ---------------- */
+let ownerTrialDaysLeft = 30, ownerSubscribed = false;
+let driverTrialDaysLeft = 30, driverSubscribed = false;
+const ANNUAL_SUB_PRICE = 4800000; // stored in Toman base, like all other amounts
+let paywallRole = null;
+
+function showPaywall(role){
+  paywallRole = role;
+  const tint = role==='owner' ? 'var(--owner-tint)' : 'var(--driver-tint)';
+  const dark = role==='owner' ? 'var(--owner-dark)' : 'var(--driver-dark)';
+  const icon = document.getElementById('pw-icon');
+  icon.style.background = tint; icon.style.color = dark;
+  document.getElementById('pw-desc').textContent = role==='owner'
+    ? 'یک ماه استفادهٔ رایگان شما به پایان رسیده. برای ادامهٔ استفاده از برنامه، اشتراک سالانهٔ خود را تهیه کنید.'
+    : 'یک ماه استفادهٔ رایگان شما به پایان رسیده. برای ادامهٔ استفاده از برنامه، اشتراک سالانهٔ خودتان را تهیه کنید.';
+  document.getElementById('pw-price').textContent = money(ANNUAL_SUB_PRICE);
+  document.getElementById('pw-buy-btn').className = 'btn ' + (role==='owner' ? 'owner-btn' : 'driver-btn');
+  goRoot('paywall');
+}
+function purchaseSubscription(){
+  if(paywallRole==='owner'){
+    ownerSubscribed = true;
+    toast('اشتراک سالانه با موفقیت خریداری شد');
+    goRoot('owner-dashboard'); renderAll();
+  } else if(paywallRole==='driver'){
+    driverSubscribed = true;
+    toast('اشتراک سالانه با موفقیت خریداری شد');
+    goRoot('driver-dashboard'); renderAll();
+  }
+}
+function renderSubscriptionInfo(){
+  const oPrice = document.getElementById('op-sub-price'); if(oPrice) oPrice.textContent = money(ANNUAL_SUB_PRICE) + ' / سالانه';
+  const dPrice = document.getElementById('dp-sub-price'); if(dPrice) dPrice.textContent = money(ANNUAL_SUB_PRICE) + ' / سالانه';
+  const oBadge = document.getElementById('op-sub-badge'), oStatus = document.getElementById('op-sub-status'), oRemain = document.getElementById('op-sub-remaining');
+  if(oBadge){
+    if(ownerSubscribed){ oBadge.textContent = 'فعال'; oBadge.className = 'status-pill active'; oStatus.textContent = 'اشتراک سالانه'; oRemain.textContent = '—'; }
+    else if(ownerTrialDaysLeft>0){ oBadge.textContent = 'دورهٔ رایگان'; oBadge.className = 'status-pill pending'; oStatus.textContent = 'یک ماه رایگان'; oRemain.textContent = fa(ownerTrialDaysLeft) + ' روز'; }
+    else { oBadge.textContent = 'منقضی‌شده'; oBadge.className = 'status-pill pending'; oStatus.textContent = 'دورهٔ رایگان تمام شده'; oRemain.textContent = '0 روز'; }
+  }
+  const dBadge = document.getElementById('dp-sub-badge'), dStatus = document.getElementById('dp-sub-status'), dRemain = document.getElementById('dp-sub-remaining');
+  if(dBadge){
+    if(driverSubscribed){ dBadge.textContent = 'فعال'; dBadge.className = 'status-pill active'; dStatus.textContent = 'اشتراک سالانه'; dRemain.textContent = '—'; }
+    else if(driverTrialDaysLeft>0){ dBadge.textContent = 'دورهٔ رایگان'; dBadge.className = 'status-pill pending'; dStatus.textContent = 'یک ماه رایگان'; dRemain.textContent = fa(driverTrialDaysLeft) + ' روز'; }
+    else { dBadge.textContent = 'منقضی‌شده'; dBadge.className = 'status-pill pending'; dStatus.textContent = 'دورهٔ رایگان تمام شده'; dRemain.textContent = '0 روز'; }
+  }
+}
+function simulateTrialEnd(role){
+  if(role==='owner') ownerTrialDaysLeft = 0; else driverTrialDaysLeft = 0;
+  showPaywall(role);
+}
+
+function ownerLogin(){
+  if(!ownerSubscribed && ownerTrialDaysLeft<=0){ showPaywall('owner'); return; }
+  toast('ورود موفق — خوش آمدید'); goRoot('owner-dashboard'); renderAll();
+}
+function driverLogin(){
+  if(!driverSubscribed && driverTrialDaysLeft<=0){ showPaywall('driver'); return; }
+  toast('ورود موفق — خوش آمدید'); goRoot('driver-dashboard'); renderAll();
+}
+
+/* ---------------- Data store (pre-filled with example data — clear it from within the app to start fresh) ---------------- */
+const store = {
+  trucks: [
+    {id:1, plate:'22 الف 262 ایران 22', brand:'ولوو', model:'1401'},
+    {id:2, plate:'88 ب 910 ایران 10', brand:'اسکانیا', model:'1398'}
+  ],
+  drivers: [
+    {id:1, name:'علی رضایی', phone:'0935xxxxxxx', truck:'22 الف 262', status:'فعال', payType:'percent', payValue:20}
+  ],
+  trips: [
+    {id:1, origin:'تهران', dest:'اصفهان', cargo:'مصالح ساختمانی', weight:'18', income:8500000, date:'1403/06/02', desc:'بار به‌موقع تحویل داده شد.', commission:250000, settled:true, paidTo:'owner'},
+    {id:2, origin:'اصفهان', dest:'شیراز', cargo:'مواد غذایی', weight:'12', income:6200000, date:'1403/06/05', desc:'', commission:150000, settled:false, paidTo:null}
+  ],
+  expenses: [
+    {id:1, cat:'سوخت', amount:1200000, date:'1403/06/03', desc:'سوخت‌گیری جادهٔ قم'},
+    {id:2, cat:'عوارض', amount:180000, date:'1403/06/05', desc:'عوارض آزادراه'}
+  ],
+  payments: [],
+  nextId: {truck:3, driver:2, trip:3, expense:3}
+};
+let pendingCat = 'سوخت';
+
+function totalIncome(){ return store.trips.reduce((s,t)=>s+t.income,0); }
+function totalExpense(){ return store.expenses.reduce((s,e)=>s+e.amount,0); }
+
+/* ---------------- Renderers ---------------- */
+function renderTrucks(){
+  const el = document.getElementById('trucks-list');
+  const selEl = document.getElementById('inv-truck');
+  if(!store.trucks.length){
+    el.innerHTML = emptyState('هنوز کامیونی ثبت نشده است');
+  } else {
+    el.innerHTML = store.trucks.map(t=>`
+      <div class="list-item press-item"
+           onmousedown="startPress(${t.id})" onmouseup="cancelPress()" onmouseleave="cancelPress()"
+           ontouchstart="startPress(${t.id})" ontouchend="cancelPress()" ontouchmove="cancelPress()"
+           oncontextmenu="return false">
+        <div class="avatar" style="background:var(--owner-tint);color:var(--owner-dark)">${ICON.truck}</div>
+        <div class="meta"><strong>${t.brand} ${t.model}</strong><span>پلاک: ${t.plate}</span></div>
+        <div class="side"><button class="icon-btn" onclick="openTruckActions(${t.id})">${ICON.chev}</button></div>
+      </div>`).join('');
+  }
+  if(selEl) selEl.innerHTML = store.trucks.map(t=>`<option value="${t.plate}">${t.brand} ${t.model} — ${t.plate}</option>`).join('');
+}
+function payDescription(d){
+  return d.payType==='salary' ? `حقوق ثابت: ${money(d.payValue)} / ماه` : `${fa(d.payValue)}% از هر سرویس`;
+}
+function renderDrivers(){
+  const el = document.getElementById('drivers-list');
+  el.innerHTML = !store.drivers.length ? emptyState('هنوز راننده‌ای ثبت نشده است') :
+    store.drivers.map(d=>`
+      <div class="list-item" style="cursor:pointer" onclick="openDriverDetail(${d.id})">
+        <div class="avatar" style="background:var(--owner-tint);color:var(--owner-dark)">${d.name.charAt(0)}</div>
+        <div class="meta"><strong>${d.name}</strong><span>کامیون: ${d.truck} · ${payDescription(d)}</span></div>
+        <div class="side" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="status-pill ${d.status==='فعال'?'active':'pending'}">${d.status}</span>${ICON.chev}</div>
+      </div>`).join('');
+}
+function tripRow(t, forOwner){
+  return `<div class="list-item" style="cursor:pointer" onclick="openTripDetail(${t.id})">
+    <div class="avatar" style="background:${forOwner?'var(--owner-tint)':'var(--driver-tint)'};color:${forOwner?'var(--owner-dark)':'var(--driver-dark)'}">${ICON.route}</div>
+    <div class="meta"><strong>${t.origin} ← ${t.dest}</strong><span>${t.cargo} · ${t.weight} تن · ${t.date}</span></div>
+    <div class="side"><div class="amount pos">${amt(t.income)}</div>${ICON.chev}</div>
+  </div>`;
+}
+function expenseRow(e){
+  return `<div class="list-item">
+    <div class="avatar" style="background:var(--danger-tint);color:var(--danger)">${ICON.expense}</div>
+    <div class="meta"><strong>${e.cat}</strong><span>${e.desc||'—'} · ${e.date}</span></div>
+    <div class="side"><div class="amount neg">-${amt(e.amount)}</div></div>
+  </div>`;
+}
+function incomeRow(t){
+  return `<div class="list-item">
+    <div class="avatar" style="background:var(--success-tint);color:var(--success)">${ICON.income}</div>
+    <div class="meta"><strong>سرویس ${t.origin} به ${t.dest}</strong><span>${t.date}</span></div>
+    <div class="side"><div class="amount pos">+${amt(t.income)}</div></div>
+  </div>`;
+}
+function emptyState(msg){
+  return `<div class="empty-state"><div class="eicon">${ICON.route}</div><p>${msg}</p></div>`;
+}
+
+function renderTrips(){
+  const rows = [...store.trips].reverse();
+  document.getElementById('owner-trips-list').innerHTML = rows.length ? rows.map(t=>tripRow(t,true)).join('') : emptyState('هنوز سرویسی ثبت نشده است');
+  document.getElementById('driver-trips-list').innerHTML = rows.length ? rows.map(t=>tripRow(t,false)).join('') : emptyState('هنوز سرویسی ثبت نکرده‌اید');
+  document.getElementById('dash-recent-trips').innerHTML = rows.slice(0,2).map(t=>tripRow(t,true)).join('') || emptyState('سرویسی برای نمایش نیست');
+  document.getElementById('ddash-recent-trips').innerHTML = rows.slice(0,2).map(t=>tripRow(t,false)).join('') || emptyState('سرویسی برای نمایش نیست');
+  document.getElementById('ddash-trip-count').textContent = fa(store.trips.length) + ' سرویس';
+}
+let viewingTripId = null;
+function openTripDetail(tripId){
+  const t = store.trips.find(x=>x.id===tripId);
+  if(!t) return;
+  const driver = store.drivers[0] || null;
+  viewingTripId = tripId;
+  document.getElementById('td-origin').textContent = t.origin;
+  document.getElementById('td-dest').textContent = t.dest;
+  document.getElementById('td-cargo').textContent = t.cargo;
+  document.getElementById('td-weight').textContent = t.weight + ' تن';
+  document.getElementById('td-income').textContent = money(t.income);
+  document.getElementById('td-date').textContent = t.date;
+  document.getElementById('td-id').textContent = '#' + fa(t.id);
+  document.getElementById('td-desc').textContent = t.desc && t.desc.trim() ? t.desc : 'توضیحاتی ثبت نشده است.';
+  document.getElementById('td-commission').textContent = money(t.commission||0);
+  document.getElementById('td-share').textContent = driver ? money(driverNetShare(t, driver)) : '—';
+  document.getElementById('td-settled').innerHTML = t.settled ? `<span class="status-pill settled">تسویه‌شده</span>` : `<span class="status-pill pending">تسویه‌نشده</span>`;
+  document.getElementById('td-paidto').textContent = t.paidTo==='driver' ? 'راننده' : t.paidTo==='owner' ? 'صاحب کامیون' : '—';
+  goTo('trip-detail');
+}
+function renderExpenses(){
+  const rows = [...store.expenses].reverse();
+  document.getElementById('owner-expenses-list').innerHTML = rows.length ? rows.map(expenseRow).join('') : emptyState('هزینه‌ای ثبت نشده است');
+  document.getElementById('driver-expenses-list').innerHTML = rows.length ? rows.map(expenseRow).join('') : emptyState('هزینه‌ای ثبت نکرده‌اید');
+  document.getElementById('owner-expense-total').textContent = money(totalExpense());
+  document.getElementById('dash-expense').textContent = money(totalExpense());
+  document.getElementById('ddash-expense').textContent = money(totalExpense());
+}
+function renderIncome(){
+  const rows = [...store.trips].reverse();
+  document.getElementById('owner-income-list').innerHTML = rows.length ? rows.map(incomeRow).join('') : emptyState('درآمدی ثبت نشده است');
+  document.getElementById('driver-income-list').innerHTML = rows.length ? rows.map(incomeRow).join('') : emptyState('درآمدی ثبت نکرده‌اید');
+  document.getElementById('owner-income-total').textContent = money(totalIncome());
+  document.getElementById('driver-income-total').textContent = money(totalIncome());
+  document.getElementById('dash-income').textContent = money(totalIncome());
+  document.getElementById('ddash-income').textContent = money(totalIncome());
+  renderDashNet();
+}
+function renderDashNet(){
+  const net = totalIncome() - totalExpense();
+  const netEl = document.getElementById('dash-net');
+  netEl.textContent = money(Math.abs(net));
+  netEl.style.color = net >= 0 ? 'var(--success)' : 'var(--danger)';
+}
+function driverNetShare(t, driver){
+  const net = t.income - (t.commission||0);
+  return driver.payType==='percent' ? Math.round(net * driver.payValue/100) : net;
+}
+function driverEntitlement(driver){
+  if(!driver) return 0;
+  if(driver.payType==='salary') return driver.payValue;
+  return store.trips.reduce((s,t)=> s + driverNetShare(t,driver), 0);
+}
+function amountAlreadyWithDriver(driver){
+  if(!driver) return 0;
+  return store.trips.filter(t=>t.settled && t.paidTo==='driver').reduce((s,t)=> s + driverNetShare(t,driver), 0);
+}
+function payDescriptionFull(d){
+  return d.payType==='salary' ? `حقوق ثابت ماهانه (${money(d.payValue)})` : `${fa(d.payValue)}% از هر سرویس`;
+}
+function serviceSettlementCard(t, driver, editable){
+  const share = driver ? driverNetShare(t, driver) : 0;
+  const settledBadge = t.settled ? `<span class="status-pill settled">تسویه‌شده</span>` : `<span class="status-pill pending">تسویه‌نشده</span>`;
+  const paidToText = t.paidTo==='driver' ? 'واریز به راننده' : t.paidTo==='owner' ? 'واریز به صاحب کامیون' : '';
+  const commissionCell = editable
+    ? `<input type="text" inputmode="numeric" value="${amt(t.commission||0)}" style="width:120px;text-align:left;direction:ltr;border:1px solid var(--border);border-radius:8px;padding:6px 8px;font-family:inherit;font-size:12.5px" onchange="updateCommission(${t.id}, this.value)">`
+    : money(t.commission||0);
+  const isEditingThis = editable && editingSettlementId===t.id;
+  const cardClass = 'card' + (t.settled && !isEditingThis ? ' settled' : '');
+
+  let bottomSection = '';
+  if(editable){
+    if(isEditingThis){
+      bottomSection = `
+      <div class="toggle-row" id="set-status-${t.id}" style="margin-top:10px">
+        <div class="toggle-chip for-owner ${!t.settled?'sel':''}" data-settled="false" onclick="pickSettledChip(this,${t.id})">تسویه‌نشده</div>
+        <div class="toggle-chip for-owner ${t.settled?'sel':''}" data-settled="true" onclick="pickSettledChip(this,${t.id})">تسویه‌شده</div>
+      </div>
+      <div class="toggle-row" id="set-paidto-${t.id}" style="margin-top:8px;${t.settled?'':'display:none'}">
+        <div class="toggle-chip for-owner ${t.paidTo==='driver'?'sel':''}" data-paidto="driver" onclick="pickPaidToChip(this)">واریز به راننده</div>
+        <div class="toggle-chip for-owner ${t.paidTo==='owner'?'sel':''}" data-paidto="owner" onclick="pickPaidToChip(this)">واریز به صاحب کامیون</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn owner-btn sm" style="width:auto;flex:1;padding:9px" onclick="confirmSettlement(${t.id})">${ICON.check}تایید</button>
+        <button class="btn ghost sm" style="width:auto;flex:1;padding:9px" onclick="cancelEditSettlement()">انصراف</button>
+      </div>`;
+    } else {
+      bottomSection = `
+      <div class="row-between" style="margin-top:10px">
+        <div>${settledBadge}${paidToText ? `<span style="font-size:11.5px;color:var(--ink-soft);margin-inline-start:6px">${paidToText}</span>` : ''}</div>
+        <button class="btn ghost sm" style="width:auto;padding:6px 14px" onclick="openEditSettlement(${t.id})">${ICON.edit}ویرایش</button>
+      </div>`;
+    }
+  } else {
+    bottomSection = `
+      <div class="row-between" style="margin-top:10px">
+        ${settledBadge}
+        ${paidToText ? `<span style="font-size:11.5px;color:var(--ink-soft)">${paidToText}</span>` : ''}
+      </div>`;
+  }
+
+  return `<div class="${cardClass}">
+    <div class="row-between" style="margin-bottom:8px">
+      <strong style="font-size:13.5px">${t.origin} ← ${t.dest}</strong>
+      <span style="font-size:11px;color:var(--ink-faint)">${t.date}</span>
+    </div>
+    <div class="kv"><span class="k">مبلغ کل بارنامه</span><span class="v">${money(t.income)}</span></div>
+    <div class="kv"><span class="k">کمیسیون بارنامه</span><span class="v">${commissionCell}</span></div>
+    <div class="kv"><span class="k">سهم راننده از این سرویس</span><span class="v" style="color:var(--success)">${money(share)}</span></div>
+    ${bottomSection}
+  </div>`;
+}
+let editingSettlementId = null;
+function openEditSettlement(tripId){ editingSettlementId = tripId; renderSettlement(); }
+function cancelEditSettlement(){ editingSettlementId = null; renderSettlement(); }
+function pickSettledChip(el, tripId){
+  el.parentElement.querySelectorAll('.toggle-chip').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  const settled = el.dataset.settled === 'true';
+  const paidToRow = document.getElementById('set-paidto-'+tripId);
+  if(paidToRow) paidToRow.style.display = settled ? 'flex' : 'none';
+}
+function pickPaidToChip(el){
+  el.parentElement.querySelectorAll('.toggle-chip').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function confirmSettlement(tripId){
+  const statusRow = document.getElementById('set-status-'+tripId);
+  const selStatus = statusRow ? statusRow.querySelector('.toggle-chip.sel') : null;
+  const settled = !!(selStatus && selStatus.dataset.settled === 'true');
+  let paidTo = null;
+  if(settled){
+    const paidToRow = document.getElementById('set-paidto-'+tripId);
+    const selPaidTo = paidToRow ? paidToRow.querySelector('.toggle-chip.sel') : null;
+    if(!selPaidTo){ toast('مشخص کنید واریزی به چه کسی بوده است'); return; }
+    paidTo = selPaidTo.dataset.paidto;
+  }
+  const t = store.trips.find(x=>x.id===tripId);
+  if(!t) return;
+  t.settled = settled;
+  t.paidTo = paidTo;
+  editingSettlementId = null;
+  renderSettlement();
+  toast('وضعیت تسویه ثبت و تایید شد');
+}
+function updateCommission(tripId, val){
+  const t = store.trips.find(x=>x.id===tripId);
+  if(!t) return;
+  const raw = String(val).replace(/[^\d]/g,'');
+  t.commission = fromDisplayUnit(parseInt(raw||'0',10));
+  renderSettlement();
+}
+function renderSettlement(){
+  const driver = store.drivers[0] || null;
+  const inc = totalIncome(), exp = totalExpense();
+  const entitlement = driverEntitlement(driver);
+  const paidDirect = amountAlreadyWithDriver(driver);
+  const manualPaid = store.payments.reduce((s,p)=>s+p.amount,0);
+  const remaining = Math.max(entitlement - paidDirect - manualPaid, 0);
+  const label = driver ? 'حقوق راننده (' + payDescriptionFull(driver) + ')' : 'حقوق راننده';
+
+  document.getElementById('settle-owner-income').textContent = money(inc);
+  document.getElementById('settle-owner-expense').textContent = money(exp);
+  document.getElementById('settle-owner-share-label').textContent = label;
+  document.getElementById('settle-owner-share').textContent = money(entitlement);
+  document.getElementById('settle-owner-paid-direct').textContent = money(paidDirect);
+  document.getElementById('owner-settle-amount').textContent = money(remaining);
+
+  document.getElementById('settle-driver-income').textContent = money(inc);
+  document.getElementById('settle-driver-expense').textContent = money(exp);
+  document.getElementById('settle-driver-share-label').textContent = driver ? payDescriptionFull(driver) : 'حقوق شما';
+  document.getElementById('settle-driver-share').textContent = money(entitlement);
+  document.getElementById('settle-driver-paid-direct').textContent = money(paidDirect);
+  document.getElementById('driver-settle-amount').textContent = money(remaining);
+
+  const paidHtml = store.payments.length ? store.payments.map(p=>`
+    <div class="kv"><span class="k">${p.date}</span><span class="v" style="color:var(--success)">${amt(p.amount)} ${unitLabel()}</span></div>
+  `).join('') : `<p style="font-size:12.5px;color:var(--ink-faint);margin:0">هنوز پرداختی ثبت نشده است.</p>`;
+  document.getElementById('owner-payments-list').innerHTML = paidHtml;
+  document.getElementById('driver-payments-list').innerHTML = paidHtml;
+
+  const tripsSorted = [...store.trips].reverse();
+  document.getElementById('owner-settlement-trips-list').innerHTML = tripsSorted.length ? tripsSorted.map(t=>serviceSettlementCard(t, driver, true)).join('') : emptyState('سرویسی ثبت نشده است');
+  document.getElementById('driver-settlement-trips-list').innerHTML = tripsSorted.length ? tripsSorted.map(t=>serviceSettlementCard(t, driver, false)).join('') : emptyState('سرویسی ثبت نشده است');
+}
+function renderDashboardStats(){
+  document.getElementById('dash-truck-count').textContent = fa(store.trucks.length);
+  document.getElementById('dash-driver-count').textContent = fa(store.drivers.length);
+}
+function renderAll(){ renderTrucks(); renderDrivers(); renderTrips(); renderExpenses(); renderIncome(); renderSettlement(); renderDashboardStats(); renderSubscriptionInfo(); }
+
+/* ---------------- Actions ---------------- */
+let editingTruckId = null;
+function buildPlateString(n2, letter, n3, prov){
+  if(!n2 || !letter || !n3 || !prov) return null;
+  return `${n2} ${letter} ${n3} ایران ${prov}`;
+}
+function parsePlateString(str){
+  const m = String(str||'').match(/^(\d+)\s+(\S+)\s+(\d+)\s+ایران\s+(\d+)$/);
+  return m ? {n2:m[1], letter:m[2], n3:m[3], prov:m[4]} : {n2:'',letter:'',n3:'',prov:''};
+}
+function clearPlateFields(){
+  document.getElementById('af-plate-2').value = '';
+  document.getElementById('af-plate-letter').value = '';
+  document.getElementById('af-plate-3').value = '';
+  document.getElementById('af-plate-province').value = '';
+}
+function openAddTruck(){
+  editingTruckId = null;
+  document.getElementById('af-title').textContent = 'افزودن کامیون';
+  clearPlateFields();
+  document.getElementById('af-brand').value = '';
+  document.getElementById('af-model').value = '';
+  goTo('owner-add-truck');
+}
+function submitAddTruck(){
+  const n2 = document.getElementById('af-plate-2').value.trim();
+  const letter = document.getElementById('af-plate-letter').value;
+  const n3 = document.getElementById('af-plate-3').value.trim();
+  const prov = document.getElementById('af-plate-province').value.trim();
+  const plate = buildPlateString(n2, letter, n3, prov);
+  const brand = document.getElementById('af-brand').value.trim();
+  const model = document.getElementById('af-model').value.trim();
+  if(!plate || !brand || !model){ toast('لطفاً شماره پلاک، برند و مدل را کامل وارد کنید'); return; }
+  if(editingTruckId){
+    const t = store.trucks.find(x=>x.id===editingTruckId);
+    if(t) Object.assign(t, {plate, brand, model});
+    toast('کامیون ویرایش شد');
+    editingTruckId = null;
+  } else {
+    store.trucks.push({id:store.nextId.truck++, plate, brand, model});
+    toast('کامیون با موفقیت افزوده شد');
+  }
+  renderTrucks(); renderDashboardStats();
+  goTab('owner-trucks');
+}
+
+/* ---------------- Long-press (truck edit/delete) ---------------- */
+let pressTimer = null;
+let actionTruckId = null;
+function startPress(truckId){
+  cancelPress();
+  pressTimer = setTimeout(()=>openTruckActions(truckId), 500);
+}
+function cancelPress(){
+  if(pressTimer){ clearTimeout(pressTimer); pressTimer = null; }
+}
+function openTruckActions(truckId){
+  cancelPress();
+  actionTruckId = truckId;
+  document.getElementById('truck-action-sheet').classList.add('show');
+}
+function closeTruckActions(){
+  document.getElementById('truck-action-sheet').classList.remove('show');
+}
+function editTruckAction(){
+  const t = store.trucks.find(x=>x.id===actionTruckId);
+  closeTruckActions();
+  if(!t) return;
+  editingTruckId = t.id;
+  document.getElementById('af-title').textContent = 'ویرایش کامیون';
+  const parts = parsePlateString(t.plate);
+  document.getElementById('af-plate-2').value = parts.n2;
+  document.getElementById('af-plate-letter').value = parts.letter;
+  document.getElementById('af-plate-3').value = parts.n3;
+  document.getElementById('af-plate-province').value = parts.prov;
+  document.getElementById('af-brand').value = t.brand;
+  document.getElementById('af-model').value = t.model;
+  goTo('owner-add-truck');
+}
+function deleteTruckAction(){
+  store.trucks = store.trucks.filter(t=>t.id!==actionTruckId);
+  closeTruckActions();
+  renderTrucks(); renderDashboardStats();
+  toast('کامیون حذف شد');
+}
+function sendInvite(){
+  const phone = document.getElementById('inv-phone').value.trim();
+  if(!phone){ toast('شماره موبایل راننده را وارد کنید'); return; }
+  const code = 'DRV-' + Math.floor(100000 + Math.random()*899999);
+  document.getElementById('invite-code-val').textContent = code;
+  document.getElementById('invite-result').style.display = 'block';
+}
+function finishInvite(){
+  store.drivers.push({id:store.nextId.driver++, name:'راننده جدید', phone:document.getElementById('inv-phone').value.trim(), truck: document.getElementById('inv-truck').value || '—', status:'در انتظار پذیرش', payType:'percent', payValue:20});
+  renderDrivers();
+  toast('دعوت ارسال شد');
+  document.getElementById('invite-result').style.display = 'none';
+  document.getElementById('inv-phone').value = '';
+  goTab('owner-drivers');
+}
+
+/* ---------------- Driver pay detail ---------------- */
+let selectedDriverId = null;
+function openDriverDetail(driverId){
+  const d = store.drivers.find(x=>x.id===driverId);
+  if(!d){ toast('ابتدا یک راننده اضافه کنید'); return; }
+  selectedDriverId = driverId;
+  document.getElementById('dd-avatar').textContent = d.name.charAt(0);
+  document.getElementById('dd-name').textContent = d.name;
+  document.getElementById('dd-truck').textContent = 'کامیون: ' + d.truck;
+  document.getElementById('dd-percent-value').value = d.payType==='percent' ? d.payValue : '';
+  document.getElementById('dd-salary-value').value = d.payType==='salary' ? d.payValue : '';
+  document.getElementById('dd-salary-label').textContent = `مبلغ حقوق ماهانه (${unitLabel()})`;
+  selectPayType(d.payType);
+  goTo('driver-detail');
+}
+function selectPayType(type){
+  document.querySelectorAll('#driver-detail .toggle-chip[data-paytype]').forEach(c=>c.classList.toggle('sel', c.dataset.paytype===type));
+  document.getElementById('dd-percent-field').style.display = type==='percent' ? 'block' : 'none';
+  document.getElementById('dd-salary-field').style.display = type==='salary' ? 'block' : 'none';
+}
+function saveDriverPay(){
+  const d = store.drivers.find(x=>x.id===selectedDriverId);
+  if(!d) return;
+  const type = document.querySelector('#driver-detail .toggle-chip.sel[data-paytype]').dataset.paytype;
+  if(type==='percent'){
+    const v = parseInt(document.getElementById('dd-percent-value').value.replace(/[^\d]/g,''),10);
+    if(!v){ toast('درصد راننده را وارد کنید'); return; }
+    d.payType = 'percent'; d.payValue = v;
+  } else {
+    const raw = document.getElementById('dd-salary-value').value.replace(/[^\d]/g,'');
+    if(!raw){ toast('مبلغ حقوق ماهانه را وارد کنید'); return; }
+    d.payType = 'salary'; d.payValue = fromDisplayUnit(parseInt(raw,10));
+  }
+  renderDrivers(); renderSettlement();
+  toast('تنظیمات حقوق راننده ذخیره شد');
+  goTab('owner-drivers');
+}
+function submitTrip(){
+  const origin = document.getElementById('tf-origin').value.trim();
+  const dest = document.getElementById('tf-dest').value.trim();
+  const incomeRaw = document.getElementById('tf-income').value.replace(/[^\d]/g,'');
+  if(!origin || !dest || !incomeRaw){ toast('مبدا، مقصد و درآمد را وارد کنید'); return; }
+  store.trips.push({
+    id: store.nextId.trip++, origin, dest,
+    cargo: document.getElementById('tf-cargo').value.trim() || '—',
+    weight: document.getElementById('tf-weight').value.trim() || '—',
+    income: fromDisplayUnit(parseInt(incomeRaw,10)),
+    date: document.getElementById('tf-date').value.trim() || '—',
+    desc: document.getElementById('tf-desc').value.trim(),
+    commission: 0, settled: false, paidTo: null
+  });
+  renderTrips(); renderIncome(); renderSettlement();
+  toast('سرویس با موفقیت ثبت شد');
+  goTab('driver-trips');
+}
+function pickCat(elm){
+  document.querySelectorAll('#exp-cat-row .toggle-chip').forEach(c=>c.classList.remove('sel'));
+  elm.classList.add('sel');
+  pendingCat = elm.dataset.cat;
+}
+function mockAttach(){ document.getElementById('ef-receipt-lbl').textContent = 'رسید.jpg ضمیمه شد ✓'; }
+function submitExpense(){
+  const amountRaw = document.getElementById('ef-amount').value.replace(/[^\d]/g,'');
+  if(!amountRaw){ toast('مبلغ هزینه را وارد کنید'); return; }
+  store.expenses.push({
+    id: store.nextId.expense++, cat: pendingCat, amount: fromDisplayUnit(parseInt(amountRaw,10)),
+    date: document.getElementById('ef-date').value.trim() || '—',
+    desc: document.getElementById('ef-desc').value.trim()
+  });
+  renderExpenses(); renderSettlement();
+  toast('هزینه با موفقیت ثبت شد');
+  goTab('driver-expenses');
+}
+function recordPayment(role){
+  const driver = store.drivers[0] || null;
+  const entitlement = driverEntitlement(driver);
+  const paidDirect = amountAlreadyWithDriver(driver);
+  const manualPaid = store.payments.reduce((s,p)=>s+p.amount,0);
+  const remaining = entitlement - paidDirect - manualPaid;
+  if(remaining <= 0){ toast('چیزی برای پرداخت باقی نمانده است'); return; }
+  store.payments.push({amount: remaining, date:'1403/06/12'});
+  renderSettlement();
+  toast('پرداخت با موفقیت ثبت شد');
+}
+
+/* ---------------- Init ---------------- */
+document.getElementById('inv-truck');
+applyCurrencyLabels();
+renderAll();
+render('splash');
+setTimeout(()=>{ if(navStack.length===1 && navStack[0]==='splash'){ goRoot('role-select'); } }, 2200);
+</script>
+</body>
+</html>

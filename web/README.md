@@ -1,0 +1,62 @@
+# اجرای پیش‌نمایش روی سرور
+
+این پوشه همان پیش‌نمایش HTML تأییدشده (با تمام قابلیت‌های تازه: ویجت پلاک ایرانی، حقوق راننده، تسویهٔ تک‌به‌تک با تایید/ویرایش، دورهٔ رایگان و اشتراک، داشبورد جدید) است، آماده برای بالا آوردن روی هر سرور.
+
+`index.html` یک فایل کاملاً مستقل است (تمام CSS و JavaScript داخل همان فایل)؛ فقط برای فونت فارسی Vazirmatn به اینترنت مرورگر کاربر وصل می‌شود (از Google Fonts) — خودِ سرور نیازی به هیچ Backend یا پایگاه‌دادهٔ خاصی ندارد.
+
+## روش ۱ — با Docker (پیشنهادی، اگر سرور شما Docker دارد)
+
+```bash
+cd web
+docker compose up -d --build
+```
+
+بعد در مرورگر به آدرس `http://<آی‌پی سرور شما>` بروید. برای توقف: `docker compose down`.
+
+اگر ترجیح می‌دهید بدون Compose:
+
+```bash
+cd web
+docker build -t truckaccounting-web .
+docker run -d -p 80:80 --name truckaccounting-web truckaccounting-web
+```
+
+## روش ۲ — بدون Docker، مستقیم با Nginx یا Apache
+
+فقط کافی‌ست `index.html` را در پوشهٔ وب‌سرور کپی کنید:
+
+```bash
+# Nginx (مسیر معمول Ubuntu/Debian)
+sudo cp index.html /var/www/html/index.html
+sudo systemctl reload nginx
+
+# Apache
+sudo cp index.html /var/www/html/index.html
+sudo systemctl reload apache2
+```
+
+## روش ۳ — سریع‌ترین راه برای تست موقت (بدون نصب چیزی خاص)
+
+اگر فقط می‌خواهید سریع روی یک سرور Linux با Python از قبل نصب‌شده امتحان کنید:
+
+```bash
+cd web
+python3 -m http.server 80
+```
+
+⚠️ این روش برای تست موقت خوب است، نه برای استفادهٔ واقعی/طولانی‌مدت (بدون HTTPS، بدون مدیریت ری‌استارت خودکار).
+
+## روش ۴ — هاستینگ رایگان بدون داشتن سرور شخصی
+
+اگر اصلاً سرور ندارید و فقط می‌خواهید یک لینک زنده داشته باشید، `index.html` را می‌توانید مستقیم در یکی از این‌ها بارگذاری کنید (کشیدن‌ورهاکردن فایل کافی‌ست):
+
+- [Netlify Drop](https://app.netlify.com/drop)
+- [Vercel](https://vercel.com) (New Project → Deploy → Upload)
+- [GitHub Pages](https://pages.github.com) (اگر با Git/GitHub راحت هستید)
+- [Cloudflare Pages](https://pages.cloudflare.com)
+
+## نکات مهم
+
+- این همچنان همان **Prototype** است، نه اپلیکیشن Android واقعی — فقط برای دیدن ظاهر و جریان کار (Flow) روی صفحه‌نمایش بزرگ‌تر/سرور واقعی مفید است.
+- داده‌ها Mock هستند و در حافظهٔ مرورگر (نه سرور) نگه داشته می‌شوند؛ با رفرش صفحه از بین می‌روند.
+- برای HTTPS واقعی (که برای دامنهٔ عمومی توصیه می‌شود)، ساده‌ترین راه Certbot با Nginx یا استفاده از یک ری‌ورس‌پروکسی مثل Caddy/Cloudflare است — اگر خواستید کمک کنم تا آن را هم برایتان تنظیم کنم.

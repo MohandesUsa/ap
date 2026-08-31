@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base application theme used once Compose content is set (Compose owns real theming,
+         see core:designsystem Theme.kt — this XML theme only matters before Compose attaches
+         and while the native SplashScreen is showing). -->
+    <style name="Theme.TruckAccounting" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@color/bg_app</item>
+        <item name="android:windowBackground">@color/bg_app</item>
+    </style>
+
+    <style name="Theme.TruckAccounting.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/bg_app</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_truck</item>
+        <item name="windowSplashScreenIconBackgroundColor">@color/owner</item>
+        <item name="postSplashScreenTheme">@style/Theme.TruckAccounting</item>
+    </style>
+</resources>

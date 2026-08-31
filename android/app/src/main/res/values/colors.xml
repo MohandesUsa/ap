@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg_app">#EEF1F4</color>
+    <color name="ink">#16212C</color>
+    <color name="owner">#D9721A</color>
+    <color name="driver">#0D8A82</color>
+    <color name="surface">#FFFFFF</color>
+</resources>

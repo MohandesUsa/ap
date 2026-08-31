@@ -1,0 +1,37 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: truckaccounting
+      POSTGRES_PASSWORD: changeme
+      POSTGRES_DB: truckaccounting
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U truckaccounting"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PORT: 3000
+      DATABASE_URL: postgres://truckaccounting:changeme@postgres:5432/truckaccounting
+      # NOTE: these are development-only defaults so `docker compose up` works out of the box.
+      # Never use these values in production — see .env.example and README.md.
+      JWT_SECRET: dev-only-jwt-secret-change-me
+      JWT_REFRESH_SECRET: dev-only-jwt-refresh-secret-change-me
+    ports:
+      - "3000:3000"
+    command: sh -c "npm run migrate && node src/index.ts"
+
+volumes:
+  postgres_data:
