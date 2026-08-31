@@ -1222,8 +1222,8 @@ class LocalDb {
 }
 
 let dbApi = null;
-let currentUser = null; // {phone, role, name}
-let unsubTrucks = null, unsubDriverData = null;
+let currentUser = null; // {phone, role, name, ownerId}
+let unsubTrucks = null, unsubDriverData = null, unsubTrips = null, unsubExpenses = null, unsubPayments = null;
 
 async function initDb(){
   try{ dbApi = (window.claude && typeof window.claude.use === 'function') ? await window.claude.use('db') : null; }
@@ -1249,7 +1249,7 @@ async function initDb(){
 }
 
 function setCurrentUser(phone, data){
-  currentUser = {phone, role: data.role, name: data.name || ''};
+  currentUser = {phone, role: data.role, name: data.name || '', ownerId: data.ownerId || null};
   localStorage.setItem('ta_session', JSON.stringify({phone, role: data.role}));
   if(currentUser.role === 'owner') subscribeOwnerData(); else subscribeDriverData();
 }
@@ -1257,16 +1257,15 @@ function setCurrentUser(phone, data){
 function logout(){
   currentUser = null;
   localStorage.removeItem('ta_session');
-  if(unsubTrucks){ unsubTrucks(); unsubTrucks = null; }
-  if(unsubDriverData){ unsubDriverData(); unsubDriverData = null; }
-  store.trucks = []; store.drivers = [];
+  [unsubTrucks, unsubDriverData, unsubTrips, unsubExpenses, unsubPayments].forEach(u=>u && u());
+  unsubTrucks = unsubDriverData = unsubTrips = unsubExpenses = unsubPayments = null;
+  store.trucks = []; store.drivers = []; store.trips = []; store.expenses = []; store.payments = [];
   goRoot('role-select');
 }
 
 function subscribeOwnerData(){
   if(!dbApi || !currentUser) return;
-  if(unsubTrucks) unsubTrucks();
-  if(unsubDriverData) unsubDriverData();
+  [unsubTrucks, unsubDriverData, unsubTrips, unsubExpenses, unsubPayments].forEach(u=>u && u());
   unsubTrucks = dbApi.collection('trucks').where('ownerId','==',currentUser.phone).onSnapshot(snap=>{
     store.trucks = snap.docs.map(d=>({id:d.id, ...d.data()}));
     renderTrucks(); renderDashboardStats();
@@ -1275,17 +1274,41 @@ function subscribeOwnerData(){
     store.drivers = snap.docs.map(d=>({id:d.id, name:d.data().name, phone:d.data().phone, truck:d.data().truckPlate, status:d.data().status, payType:d.data().payType, payValue:d.data().payValue}));
     renderDrivers(); renderDashboardStats(); renderSettlement();
   }, e=>console.error('drivers sync error', e));
+  unsubTrips = dbApi.collection('trips').where('ownerId','==',currentUser.phone).onSnapshot(snap=>{
+    store.trips = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    renderTrips(); renderIncome(); renderSettlement(); renderDashboardStats();
+  }, e=>console.error('trips sync error', e));
+  unsubExpenses = dbApi.collection('expenses').where('ownerId','==',currentUser.phone).onSnapshot(snap=>{
+    store.expenses = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    renderExpenses(); renderIncome(); renderSettlement();
+  }, e=>console.error('expenses sync error', e));
+  unsubPayments = dbApi.collection('payments').where('ownerId','==',currentUser.phone).onSnapshot(snap=>{
+    store.payments = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    renderSettlement();
+  }, e=>console.error('payments sync error', e));
 }
 
 function subscribeDriverData(){
   if(!dbApi || !currentUser) return;
-  if(unsubDriverData) unsubDriverData();
+  [unsubDriverData, unsubTrips, unsubExpenses, unsubPayments].forEach(u=>u && u());
   unsubDriverData = dbApi.doc('users/'+currentUser.phone).onSnapshot(snap=>{
     if(!snap.exists) return;
     const d = snap.data();
     store.drivers = [{id:snap.id, name:d.name, phone:d.phone, truck:d.truckPlate, status:d.status, payType:d.payType, payValue:d.payValue}];
     renderDrivers(); renderSettlement(); renderDashboardStats();
   }, e=>console.error('driver profile sync error', e));
+  unsubTrips = dbApi.collection('trips').where('driverId','==',currentUser.phone).onSnapshot(snap=>{
+    store.trips = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    renderTrips(); renderIncome(); renderSettlement();
+  }, e=>console.error('trips sync error', e));
+  unsubExpenses = dbApi.collection('expenses').where('driverId','==',currentUser.phone).onSnapshot(snap=>{
+    store.expenses = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    renderExpenses(); renderIncome(); renderSettlement();
+  }, e=>console.error('expenses sync error', e));
+  unsubPayments = dbApi.collection('payments').where('driverId','==',currentUser.phone).onSnapshot(snap=>{
+    store.payments = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    renderSettlement();
+  }, e=>console.error('payments sync error', e));
 }
 
 async function ownerLogin(){
@@ -1346,20 +1369,13 @@ async function driverLogin(){
   } catch(e){ console.error(e); toast('خطا در ارتباط با دیتابیس'); }
 }
 
-/* ---------------- Data store (trucks/drivers are synced live from the db capability once logged in; trips/expenses stay local — the real backend has no endpoints for those yet either) ---------------- */
+/* ---------------- Data store (all synced live from the db capability once logged in) ---------------- */
 const store = {
   trucks: [],
   drivers: [],
-  trips: [
-    {id:1, origin:'تهران', dest:'اصفهان', cargo:'مصالح ساختمانی', weight:'18', income:8500000, date:'1403/06/02', desc:'بار به‌موقع تحویل داده شد.', commission:250000, settled:true, paidTo:'owner'},
-    {id:2, origin:'اصفهان', dest:'شیراز', cargo:'مواد غذایی', weight:'12', income:6200000, date:'1403/06/05', desc:'', commission:150000, settled:false, paidTo:null}
-  ],
-  expenses: [
-    {id:1, cat:'سوخت', amount:1200000, date:'1403/06/03', desc:'سوخت‌گیری جادهٔ قم'},
-    {id:2, cat:'عوارض', amount:180000, date:'1403/06/05', desc:'عوارض آزادراه'}
-  ],
+  trips: [],
+  expenses: [],
   payments: [],
-  nextId: {trip:3, expense:3}
 };
 let pendingCat = 'سوخت';
 
@@ -1399,7 +1415,7 @@ function renderDrivers(){
       </div>`).join('');
 }
 function tripRow(t, forOwner){
-  return `<div class="list-item" style="cursor:pointer" onclick="openTripDetail(${t.id})">
+  return `<div class="list-item" style="cursor:pointer" onclick="openTripDetail('${t.id}')">
     <div class="avatar" style="background:${forOwner?'var(--owner-tint)':'var(--driver-tint)'};color:${forOwner?'var(--owner-dark)':'var(--driver-dark)'}">${ICON.route}</div>
     <div class="meta"><strong>${t.origin} ← ${t.dest}</strong><span>${t.cargo} · ${t.weight} تن · ${t.date}</span></div>
     <div class="side"><div class="amount pos">${amt(t.income)}</div>${ICON.chev}</div>
@@ -1496,7 +1512,7 @@ function serviceSettlementCard(t, driver, editable){
   const settledBadge = t.settled ? `<span class="status-pill settled">تسویه‌شده</span>` : `<span class="status-pill pending">تسویه‌نشده</span>`;
   const paidToText = t.paidTo==='driver' ? 'واریز به راننده' : t.paidTo==='owner' ? 'واریز به صاحب کامیون' : '';
   const commissionCell = editable
-    ? `<input type="text" inputmode="numeric" value="${amt(t.commission||0)}" style="width:120px;text-align:left;direction:ltr;border:1px solid var(--border);border-radius:8px;padding:6px 8px;font-family:inherit;font-size:12.5px" onchange="updateCommission(${t.id}, this.value)">`
+    ? `<input type="text" inputmode="numeric" value="${amt(t.commission||0)}" style="width:120px;text-align:left;direction:ltr;border:1px solid var(--border);border-radius:8px;padding:6px 8px;font-family:inherit;font-size:12.5px" onchange="updateCommission('${t.id}', this.value)">`
     : money(t.commission||0);
   const isEditingThis = editable && editingSettlementId===t.id;
   const cardClass = 'card' + (t.settled && !isEditingThis ? ' settled' : '');
@@ -1506,22 +1522,22 @@ function serviceSettlementCard(t, driver, editable){
     if(isEditingThis){
       bottomSection = `
       <div class="toggle-row" id="set-status-${t.id}" style="margin-top:10px">
-        <div class="toggle-chip for-owner ${!t.settled?'sel':''}" data-settled="false" onclick="pickSettledChip(this,${t.id})">تسویه‌نشده</div>
-        <div class="toggle-chip for-owner ${t.settled?'sel':''}" data-settled="true" onclick="pickSettledChip(this,${t.id})">تسویه‌شده</div>
+        <div class="toggle-chip for-owner ${!t.settled?'sel':''}" data-settled="false" onclick="pickSettledChip(this,'${t.id}')">تسویه‌نشده</div>
+        <div class="toggle-chip for-owner ${t.settled?'sel':''}" data-settled="true" onclick="pickSettledChip(this,'${t.id}')">تسویه‌شده</div>
       </div>
       <div class="toggle-row" id="set-paidto-${t.id}" style="margin-top:8px;${t.settled?'':'display:none'}">
         <div class="toggle-chip for-owner ${t.paidTo==='driver'?'sel':''}" data-paidto="driver" onclick="pickPaidToChip(this)">واریز به راننده</div>
         <div class="toggle-chip for-owner ${t.paidTo==='owner'?'sel':''}" data-paidto="owner" onclick="pickPaidToChip(this)">واریز به صاحب کامیون</div>
       </div>
       <div style="display:flex;gap:8px;margin-top:10px">
-        <button class="btn owner-btn sm" style="width:auto;flex:1;padding:9px" onclick="confirmSettlement(${t.id})">${ICON.check}تایید</button>
+        <button class="btn owner-btn sm" style="width:auto;flex:1;padding:9px" onclick="confirmSettlement('${t.id}')">${ICON.check}تایید</button>
         <button class="btn ghost sm" style="width:auto;flex:1;padding:9px" onclick="cancelEditSettlement()">انصراف</button>
       </div>`;
     } else {
       bottomSection = `
       <div class="row-between" style="margin-top:10px">
         <div>${settledBadge}${paidToText ? `<span style="font-size:11.5px;color:var(--ink-soft);margin-inline-start:6px">${paidToText}</span>` : ''}</div>
-        <button class="btn ghost sm" style="width:auto;padding:6px 14px" onclick="openEditSettlement(${t.id})">${ICON.edit}ویرایش</button>
+        <button class="btn ghost sm" style="width:auto;padding:6px 14px" onclick="openEditSettlement('${t.id}')">${ICON.edit}ویرایش</button>
       </div>`;
     }
   } else {
@@ -1557,7 +1573,7 @@ function pickPaidToChip(el){
   el.parentElement.querySelectorAll('.toggle-chip').forEach(c=>c.classList.remove('sel'));
   el.classList.add('sel');
 }
-function confirmSettlement(tripId){
+async function confirmSettlement(tripId){
   const statusRow = document.getElementById('set-status-'+tripId);
   const selStatus = statusRow ? statusRow.querySelector('.toggle-chip.sel') : null;
   const settled = !!(selStatus && selStatus.dataset.settled === 'true');
@@ -1568,20 +1584,19 @@ function confirmSettlement(tripId){
     if(!selPaidTo){ toast('مشخص کنید واریزی به چه کسی بوده است'); return; }
     paidTo = selPaidTo.dataset.paidto;
   }
-  const t = store.trips.find(x=>x.id===tripId);
-  if(!t) return;
-  t.settled = settled;
-  t.paidTo = paidTo;
-  editingSettlementId = null;
-  renderSettlement();
-  toast('وضعیت تسویه ثبت و تایید شد');
+  if(!dbApi) return;
+  try{
+    await dbApi.doc('trips/'+tripId).update({settled, paidTo});
+    editingSettlementId = null;
+    toast('وضعیت تسویه ثبت و تایید شد');
+  } catch(e){ console.error(e); toast('خطا در ذخیره‌سازی'); }
 }
-function updateCommission(tripId, val){
-  const t = store.trips.find(x=>x.id===tripId);
-  if(!t) return;
+async function updateCommission(tripId, val){
+  if(!dbApi) return;
   const raw = String(val).replace(/[^\d]/g,'');
-  t.commission = fromDisplayUnit(parseInt(raw||'0',10));
-  renderSettlement();
+  const commission = fromDisplayUnit(parseInt(raw||'0',10));
+  try{ await dbApi.doc('trips/'+tripId).update({commission}); }
+  catch(e){ console.error(e); toast('خطا در ذخیره‌سازی'); }
 }
 function renderSettlement(){
   const driver = store.drivers[0] || null;
@@ -1745,14 +1760,14 @@ function openDriverDetail(driverId){
   goTo('driver-detail');
 }
 function selectPayType(type){
-  document.querySelectorAll('#driver-detail .toggle-chip[data-paytype]').forEach(c=>c.classList.toggle('sel', c.dataset.paytype===type));
+  document.querySelectorAll('[data-screen="driver-detail"] .toggle-chip[data-paytype]').forEach(c=>c.classList.toggle('sel', c.dataset.paytype===type));
   document.getElementById('dd-percent-field').style.display = type==='percent' ? 'block' : 'none';
   document.getElementById('dd-salary-field').style.display = type==='salary' ? 'block' : 'none';
 }
 async function saveDriverPay(){
   const d = store.drivers.find(x=>x.id===selectedDriverId);
   if(!d || !dbApi) return;
-  const type = document.querySelector('#driver-detail .toggle-chip.sel[data-paytype]').dataset.paytype;
+  const type = document.querySelector('[data-screen="driver-detail"] .toggle-chip.sel[data-paytype]').dataset.paytype;
   let payValue;
   if(type==='percent'){
     const v = parseInt(document.getElementById('dd-percent-value').value.replace(/[^\d]/g,''),10);
@@ -1769,23 +1784,25 @@ async function saveDriverPay(){
     goTab('owner-drivers');
   } catch(e){ console.error(e); toast('خطا در ذخیره‌سازی'); }
 }
-function submitTrip(){
+async function submitTrip(){
   const origin = document.getElementById('tf-origin').value.trim();
   const dest = document.getElementById('tf-dest').value.trim();
   const incomeRaw = document.getElementById('tf-income').value.replace(/[^\d]/g,'');
   if(!origin || !dest || !incomeRaw){ toast('مبدا، مقصد و درآمد را وارد کنید'); return; }
-  store.trips.push({
-    id: store.nextId.trip++, origin, dest,
-    cargo: document.getElementById('tf-cargo').value.trim() || '—',
-    weight: document.getElementById('tf-weight').value.trim() || '—',
-    income: fromDisplayUnit(parseInt(incomeRaw,10)),
-    date: document.getElementById('tf-date').value.trim() || '—',
-    desc: document.getElementById('tf-desc').value.trim(),
-    commission: 0, settled: false, paidTo: null
-  });
-  renderTrips(); renderIncome(); renderSettlement();
-  toast('سرویس با موفقیت ثبت شد');
-  goTab('driver-trips');
+  if(!dbApi || !currentUser){ toast('اتصال به دیتابیس برقرار نیست'); return; }
+  try{
+    await dbApi.collection('trips').add({
+      ownerId: currentUser.ownerId, driverId: currentUser.phone, origin, dest,
+      cargo: document.getElementById('tf-cargo').value.trim() || '—',
+      weight: document.getElementById('tf-weight').value.trim() || '—',
+      income: fromDisplayUnit(parseInt(incomeRaw,10)),
+      date: document.getElementById('tf-date').value.trim() || '—',
+      desc: document.getElementById('tf-desc').value.trim(),
+      commission: 0, settled: false, paidTo: null, createdAt: Date.now(),
+    });
+    toast('سرویس با موفقیت ثبت شد');
+    goTab('driver-trips');
+  } catch(e){ console.error(e); toast('خطا در ثبت سرویس'); }
 }
 function pickCat(elm){
   document.querySelectorAll('#exp-cat-row .toggle-chip').forEach(c=>c.classList.remove('sel'));
@@ -1793,28 +1810,37 @@ function pickCat(elm){
   pendingCat = elm.dataset.cat;
 }
 function mockAttach(){ document.getElementById('ef-receipt-lbl').textContent = 'رسید.jpg ضمیمه شد ✓'; }
-function submitExpense(){
+async function submitExpense(){
   const amountRaw = document.getElementById('ef-amount').value.replace(/[^\d]/g,'');
   if(!amountRaw){ toast('مبلغ هزینه را وارد کنید'); return; }
-  store.expenses.push({
-    id: store.nextId.expense++, cat: pendingCat, amount: fromDisplayUnit(parseInt(amountRaw,10)),
-    date: document.getElementById('ef-date').value.trim() || '—',
-    desc: document.getElementById('ef-desc').value.trim()
-  });
-  renderExpenses(); renderSettlement();
-  toast('هزینه با موفقیت ثبت شد');
-  goTab('driver-expenses');
+  if(!dbApi || !currentUser){ toast('اتصال به دیتابیس برقرار نیست'); return; }
+  try{
+    await dbApi.collection('expenses').add({
+      ownerId: currentUser.ownerId, driverId: currentUser.phone, cat: pendingCat,
+      amount: fromDisplayUnit(parseInt(amountRaw,10)),
+      date: document.getElementById('ef-date').value.trim() || '—',
+      desc: document.getElementById('ef-desc').value.trim(),
+      createdAt: Date.now(),
+    });
+    toast('هزینه با موفقیت ثبت شد');
+    goTab('driver-expenses');
+  } catch(e){ console.error(e); toast('خطا در ثبت هزینه'); }
 }
-function recordPayment(role){
+async function recordPayment(role){
   const driver = store.drivers[0] || null;
   const entitlement = driverEntitlement(driver);
   const paidDirect = amountAlreadyWithDriver(driver);
   const manualPaid = store.payments.reduce((s,p)=>s+p.amount,0);
   const remaining = entitlement - paidDirect - manualPaid;
   if(remaining <= 0){ toast('چیزی برای پرداخت باقی نمانده است'); return; }
-  store.payments.push({amount: remaining, date:'1403/06/12'});
-  renderSettlement();
-  toast('پرداخت با موفقیت ثبت شد');
+  if(!dbApi || !driver){ toast('اتصال به دیتابیس برقرار نیست'); return; }
+  try{
+    await dbApi.collection('payments').add({
+      ownerId: currentUser.role==='owner' ? currentUser.phone : currentUser.ownerId,
+      driverId: driver.phone, amount: remaining, date: '1403/06/12', createdAt: Date.now(),
+    });
+    toast('پرداخت با موفقیت ثبت شد');
+  } catch(e){ console.error(e); toast('خطا در ثبت پرداخت'); }
 }
 
 /* ---------------- Init ---------------- */
