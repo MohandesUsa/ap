@@ -18,6 +18,9 @@ const testConfig: AppConfig = {
   refreshTokenTtlSeconds: 60 * 60 * 24 * 30,
   invitationTtlSeconds: 60 * 60 * 24 * 7,
   authRateLimit: { maxRequests: 100_000, windowMs: 60_000 },
+  adminJwtSecret: 'test-admin-jwt-secret',
+  adminAccessTokenTtlSeconds: 60 * 60 * 8,
+  encryptionKey: '0'.repeat(64), // 32 bytes hex — test-only, never used outside this file
 };
 
 /**

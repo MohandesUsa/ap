@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TruckAccounting Admin — Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #F3F4F8;
+    --surface: #FFFFFF;
+    --ink: #1B2030;
+    --ink-soft: #636B7E;
+    --ink-faint: #9AA1B2;
+    --border: #E2E4EC;
+
+    --primary: #4B4FE0;
+    --primary-dark: #3A3DBD;
+    --primary-tint: #ECEDFC;
+
+    --success: #1F9D63;
+    --success-tint: #E4F6ED;
+    --danger: #D6403A;
+    --danger-tint: #FCEAE9;
+    --warning: #C98A1B;
+    --warning-tint: #FBF0DC;
+
+    --radius-s: 8px;
+    --radius-m: 14px;
+    --radius-l: 20px;
+    --shadow: 0 1px 2px rgba(20,23,40,.04), 0 8px 24px rgba(20,23,40,.06);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: var(--bg);
+    color: var(--ink);
+    font-family:'Vazirmatn',sans-serif;
+    min-height:100vh;
+  }
+  .badge-super{color:var(--primary)}
+
+  /* ---------------- Login ---------------- */
+  #login-screen{
+    min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  .login-card{
+    width:100%; max-width:380px; background:var(--surface); border-radius:var(--radius-l);
+    box-shadow:var(--shadow); padding:36px 28px; text-align:center;
+  }
+  .login-logo{
+    width:56px;height:56px;border-radius:16px;background:var(--primary);color:#fff;display:flex;
+    align-items:center;justify-content:center;margin:0 auto 18px;font-weight:800;font-size:22px;
+  }
+  .login-card h1{font-size:19px;margin:0 0 4px;}
+  .login-card p{font-size:13px;color:var(--ink-soft);margin:0 0 26px;}
+  .field{margin-bottom:14px;text-align:right;}
+  .field label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-soft);margin-bottom:6px;}
+  .field input, .field select, .field textarea{
+    width:100%;border:1.5px solid var(--border);border-radius:var(--radius-s);padding:11px 13px;
+    font-family:inherit;font-size:14px;color:var(--ink);background:#fff;
+  }
+  .field input:focus, .field select:focus{outline:none;border-color:var(--primary);}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;
+    border-radius:var(--radius-s);padding:12px 18px;font-family:inherit;font-size:14px;font-weight:700;
+    cursor:pointer;color:#fff;background:var(--primary);width:100%;
+  }
+  .btn:hover{background:var(--primary-dark);}
+  .btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--border);}
+  .btn.sm{padding:8px 14px;font-size:12.5px;width:auto;}
+  .btn.danger{background:var(--danger);}
+  .login-hint{margin-top:18px;font-size:11.5px;color:var(--ink-faint);line-height:1.9;}
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(10px);z-index:200;
+    background:var(--ink);color:#fff;font-size:13px;font-weight:600;padding:12px 20px;border-radius:100px;
+    box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;white-space:nowrap;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  /* ---------------- App shell ---------------- */
+  #app-shell{display:none; min-height:100vh;}
+  #app-shell.active{display:flex;}
+  .sidebar{
+    width:230px; flex:0 0 auto; background:var(--surface); border-left:1px solid var(--border);
+    display:flex; flex-direction:column; min-height:100vh; position:sticky; top:0;
+  }
+  .sidebar-head{padding:20px 18px 14px; display:flex; align-items:center; gap:10px;}
+  .sidebar-head .logo{width:36px;height:36px;border-radius:11px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex:0 0 auto;}
+  .sidebar-head strong{display:block;font-size:14px;}
+  .sidebar-head span{font-size:11px;color:var(--ink-faint);}
+  .nav-group{padding:6px 10px;}
+  .nav-item{
+    display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; font-size:13.5px;
+    color:var(--ink-soft); font-weight:600; cursor:pointer; margin-bottom:2px;
+  }
+  .nav-item svg{flex:0 0 auto;opacity:.8;}
+  .nav-item:hover{background:var(--bg);}
+  .nav-item.active{background:var(--primary-tint); color:var(--primary-dark);}
+  .nav-item.active svg{opacity:1;}
+  .sidebar-foot{margin-top:auto; padding:14px 18px; border-top:1px solid var(--border);}
+  .sidebar-user{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+  .sidebar-user .av{width:34px;height:34px;border-radius:10px;background:var(--primary-tint);color:var(--primary-dark);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex:0 0 auto;}
+  .sidebar-user strong{display:block;font-size:12.5px;}
+  .sidebar-user span{font-size:11px;color:var(--ink-faint);}
+
+  .main{flex:1 1 auto; min-width:0; padding:22px 26px 60px;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;}
+  .topbar h1{font-size:19px;margin:0;}
+  .topbar .sub{font-size:12.5px;color:var(--ink-soft);margin-top:3px;}
+
+  .view{display:none;}
+  .view.active{display:block;}
+
+  .stat-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px;}
+  @media (max-width:1100px){.stat-grid{grid-template-columns:repeat(2,1fr);}}
+  .stat-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:16px;}
+  .stat-card .lbl{font-size:12px; color:var(--ink-soft); margin-bottom:8px;}
+  .stat-card .num{font-size:22px; font-weight:800;}
+  .stat-card .delta{font-size:11.5px; margin-top:6px; font-weight:700;}
+  .stat-card .delta.up{color:var(--success);}
+  .stat-card .delta.down{color:var(--danger);}
+
+  .card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:18px; margin-bottom:18px;}
+  .card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .card-head h3{font-size:14.5px;margin:0;}
+
+  .chart-row{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px;}
+  @media (max-width:900px){.chart-row{grid-template-columns:1fr;}}
+  .bars{display:flex; align-items:flex-end; gap:6px; height:140px; padding-top:10px;}
+  .bars .bar{flex:1; height:100%; background:var(--primary-tint); border-radius:4px 4px 0 0; position:relative; overflow:hidden;}
+  .bars .bar.rev{background:var(--success-tint);}
+  .bars .bar b{position:absolute; bottom:0; right:0; left:0; display:block; background:var(--primary); border-radius:4px 4px 0 0;}
+  .bars .bar.rev b{background:var(--success);}
+
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  thead th{text-align:right; font-size:11.5px; color:var(--ink-soft); font-weight:700; padding:0 10px 10px; border-bottom:1px solid var(--border);}
+  tbody td{padding:12px 10px; border-bottom:1px solid var(--border); vertical-align:middle;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr.clickable{cursor:pointer;}
+  tbody tr.clickable:hover{background:var(--bg);}
+
+  .pill{display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:700; padding:4px 10px; border-radius:100px;}
+  .pill.active{background:var(--success-tint); color:var(--success);}
+  .pill.expired,.pill.failed,.pill.cancelled,.pill.suspended{background:var(--danger-tint); color:var(--danger);}
+  .pill.pending{background:var(--warning-tint); color:var(--warning);}
+  .pill.role{background:var(--primary-tint); color:var(--primary-dark);}
+
+  .toolbar{display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;}
+  .toolbar input[type=text]{flex:1; min-width:180px;}
+  .toolbar select{width:auto;}
+
+  .empty{text-align:center; padding:50px 20px; color:var(--ink-faint); font-size:13px;}
+
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(20,23,40,.45); display:none; align-items:center; justify-content:center; z-index:150; padding:20px;
+  }
+  .modal-backdrop.show{display:flex;}
+  .modal{background:#fff; border-radius:var(--radius-l); width:100%; max-width:520px; max-height:88vh; overflow-y:auto; padding:22px;}
+  .modal h2{font-size:16px; margin:0 0 16px;}
+  .tabs{display:flex; gap:4px; background:var(--bg); padding:4px; border-radius:100px; margin-bottom:16px;}
+  .tab{flex:1; text-align:center; padding:8px 0; border-radius:100px; font-size:12.5px; font-weight:700; color:var(--ink-soft); cursor:pointer;}
+  .tab.active{background:var(--primary); color:#fff;}
+  .kv{display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px dashed var(--border); font-size:13px;}
+  .kv:last-child{border-bottom:none;}
+  .kv .k{color:var(--ink-soft);}
+  .kv .v{font-weight:700;}
+  .toggle-row{display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border);}
+  .toggle-row:last-child{border-bottom:none;}
+  .switch{width:42px; height:24px; border-radius:100px; background:var(--border); position:relative; cursor:pointer; flex:0 0 auto;}
+  .switch.on{background:var(--primary);}
+  .switch .knob{position:absolute; top:3px; right:3px; width:18px; height:18px; border-radius:50%; background:#fff; transition:transform .15s; box-shadow:0 1px 3px rgba(0,0,0,.2);}
+  .switch.on .knob{transform:translateX(-18px);}
+  .masked{font-family:monospace; direction:ltr; text-align:left; display:inline-block;}
+  .section-title{font-size:12.5px; font-weight:800; color:var(--ink-soft); margin:20px 0 10px; text-transform:uppercase; letter-spacing:.03em;}
+  .section-title:first-child{margin-top:0;}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">TA</div>
+    <h1>پنل مدیریت TruckAccounting</h1>
+    <p>ورود مخصوص Super Admin / Admin / Support / Accountant</p>
+    <div class="field"><label>شماره موبایل</label><input id="lg-phone" type="tel" placeholder="09xxxxxxxxx" dir="ltr" style="text-align:left" value="09120000001"></div>
+    <div class="field"><label>رمز عبور</label><input id="lg-password" type="password" placeholder="••••••••" value="adminpass"></div>
+    <div class="field">
+      <label>نقش (فقط برای این پیش‌نمایش — نسخهٔ واقعی از Backend می‌خواند)</label>
+      <select id="lg-role">
+        <option value="SUPER_ADMIN">Super Admin</option>
+        <option value="ADMIN">Admin</option>
+        <option value="SUPPORT">Support</option>
+        <option value="ACCOUNTANT">Accountant</option>
+      </select>
+    </div>
+    <button class="btn" onclick="login()">ورود</button>
+    <div class="login-hint">این یک پیش‌نمایش UI است — به هیچ Backend واقعی وصل نیست و هیچ داده یا Secret واقعی در آن نیست (طبق Phase 37).</div>
+  </div>
+</div>
+
+<div id="app-shell">
+  <div class="sidebar">
+    <div class="sidebar-head">
+      <div class="logo">TA</div>
+      <div><strong>Admin Panel</strong><span>TruckAccounting</span></div>
+    </div>
+    <div class="nav-group" id="nav-list"></div>
+    <div class="sidebar-foot">
+      <div class="sidebar-user">
+        <div class="av" id="cur-admin-av">S</div>
+        <div><strong id="cur-admin-name">—</strong><span id="cur-admin-role">—</span></div>
+      </div>
+      <button class="btn ghost sm" style="width:100%" onclick="logout()">خروج از حساب</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- DASHBOARD -->
+    <section class="view" data-view="dashboard">
+      <div class="topbar"><div><h1>داشبورد</h1><div class="sub">خلاصهٔ وضعیت کل سیستم</div></div></div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="lbl">کل کاربران</div><div class="num">۱٬۲۴۸</div><div class="delta up">▲ ۳۴ کاربر جدید امروز</div></div>
+        <div class="stat-card"><div class="lbl">کاربران فعال</div><div class="num">۱٬۱۰۲</div><div class="delta up">۸۸٪ کل کاربران</div></div>
+        <div class="stat-card"><div class="lbl">صاحبان کامیون</div><div class="num">۵۲۰</div><div class="delta">راننده: ۷۲۸</div></div>
+        <div class="stat-card"><div class="lbl">کامیون‌های ثبت‌شده</div><div class="num">۶۴۰</div><div class="delta">فعال</div></div>
+        <div class="stat-card"><div class="lbl">اشتراک‌های فعال</div><div class="num">۳۸۰</div><div class="delta up">این ماه: ۴۵ خرید جدید</div></div>
+        <div class="stat-card"><div class="lbl">اشتراک‌های منقضی</div><div class="num">۹۶</div><div class="delta down">نیاز به یادآوری تمدید</div></div>
+        <div class="stat-card"><div class="lbl">درآمد این ماه</div><div class="num">۸۵٬۲۰۰٬۰۰۰ تومان</div><div class="delta up">▲ ۱۲٪ نسبت به ماه قبل</div></div>
+        <div class="stat-card"><div class="lbl">پرداخت‌های ناموفق</div><div class="num">۱۴</div><div class="delta down">هفتهٔ جاری</div></div>
+      </div>
+
+      <div class="chart-row">
+        <div class="card">
+          <div class="card-head"><h3>رشد کاربران (۱۴ روز اخیر)</h3></div>
+          <div class="bars" id="chart-users"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>درآمد روزانه (۱۴ روز اخیر)</h3></div>
+          <div class="bars" id="chart-revenue"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>آخرین ثبت‌نام‌ها</h3><span class="btn ghost sm" onclick="goView('users')">مشاهدهٔ همه</span></div>
+        <table><thead><tr><th>نام</th><th>شماره موبایل</th><th>نقش</th><th>تاریخ</th></tr></thead>
+          <tbody id="dash-recent-users"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- USERS -->
+    <section class="view" data-view="users">
+      <div class="topbar"><div><h1>کاربران</h1><div class="sub">لیست همهٔ صاحبان کامیون و رانندگان</div></div></div>
+      <div class="toolbar">
+        <input type="text" id="user-search" placeholder="جست‌وجو بر اساس نام یا شماره موبایل..." oninput="renderUsers()">
+        <select id="user-role-filter" onchange="renderUsers()">
+          <option value="">همهٔ نقش‌ها</option><option value="owner">صاحب کامیون</option><option value="driver">راننده</option>
+        </select>
+        <select id="user-status-filter" onchange="renderUsers()">
+          <option value="">همهٔ وضعیت‌ها</option><option value="active">فعال</option><option value="suspended">غیرفعال</option>
+        </select>
+      </div>
+      <div class="card" style="padding:8px 18px">
+        <table><thead><tr><th>نام</th><th>شماره موبایل</th><th>نقش</th><th>وضعیت</th><th>تاریخ ثبت‌نام</th><th>اشتراک</th></tr></thead>
+          <tbody id="users-table"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- OWNERS -->
+    <section class="view" data-view="owners">
+      <div class="topbar"><div><h1>صاحبان کامیون</h1><div class="sub">مدیریت صاحبان کامیون و ناوگان آن‌ها</div></div></div>
+      <div class="card" style="padding:8px 18px">
+        <table><thead><tr><th>نام</th><th>شماره موبایل</th><th>تعداد کامیون</th><th>تعداد راننده</th><th>اشتراک</th></tr></thead>
+          <tbody id="owners-table"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- DRIVERS -->
+    <section class="view" data-view="drivers">
+      <div class="topbar"><div><h1>رانندگان</h1><div class="sub">مدیریت رانندگان و اتصال آن‌ها به کامیون‌ها</div></div></div>
+      <div class="card" style="padding:8px 18px">
+        <table><thead><tr><th>نام</th><th>شماره موبایل</th><th>صاحب کامیون</th><th>کامیون</th><th>وضعیت</th></tr></thead>
+          <tbody id="drivers-table"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TRUCKS -->
+    <section class="view" data-view="trucks">
+      <div class="topbar"><div><h1>کامیون‌ها</h1><div class="sub">همهٔ کامیون‌های ثبت‌شده در سیستم</div></div></div>
+      <div class="card" style="padding:8px 18px">
+        <table><thead><tr><th>پلاک</th><th>برند / مدل</th><th>صاحب کامیون</th><th>راننده</th><th>وضعیت</th></tr></thead>
+          <tbody id="trucks-table"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SUBSCRIPTIONS -->
+    <section class="view" data-view="subscriptions">
+      <div class="topbar"><div><h1>اشتراک‌ها</h1><div class="sub">وضعیت اشتراک همهٔ صاحبان کامیون</div></div></div>
+      <div class="toolbar">
+        <select id="sub-status-filter" onchange="renderSubscriptions()">
+          <option value="">همهٔ وضعیت‌ها</option><option value="active">فعال</option><option value="expired">منقضی</option>
+          <option value="pending">در انتظار</option><option value="cancelled">لغوشده</option>
+        </select>
+      </div>
+      <div class="card" style="padding:8px 18px">
+        <table><thead><tr><th>کاربر</th><th>پلن</th><th>وضعیت</th><th>تاریخ شروع</th><th>تاریخ انقضا</th></tr></thead>
+          <tbody id="subs-table"></tbody>
+        </table>
+      </div>
+
+      <div class="section-title">پلن‌های اشتراک</div>
+      <div class="card">
+        <div class="card-head"><h3>مدیریت پلن‌ها</h3><button class="btn sm" onclick="openPlanModal()">+ افزودن پلن</button></div>
+        <table><thead><tr><th>نام پلن</th><th>مدت</th><th>قیمت</th><th>وضعیت</th><th></th></tr></thead>
+          <tbody id="plans-table"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ORDERS -->
+    <section class="view" data-view="orders">
+      <div class="topbar"><div><h1>سفارش‌ها</h1><div class="sub">سفارش‌های خرید اشتراک</div></div></div>
+      <div class="card" style="padding:8px 18px">
+        <table><thead><tr><th>شناسه سفارش</th><th>کاربر</th><th>پلن</th><th>مبلغ</th><th>وضعیت</th><th>تاریخ</th></tr></thead>
+          <tbody id="orders-table"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- PAYMENTS -->
+    <section class="view" data-view="payments">
+      <div class="topbar"><div><h1>پرداخت‌ها</h1><div class="sub">تراکنش‌های پرداخت اشتراک</div></div></div>
+      <div class="toolbar">
+        <select id="pay-status-filter" onchange="renderPayments()">
+          <option value="">همهٔ وضعیت‌ها</option><option value="successful">موفق</option><option value="failed">ناموفق</option><option value="pending">در انتظار</option>
+        </select>
+        <select id="pay-provider-filter" onchange="renderPayments()">
+          <option value="">همهٔ درگاه‌ها</option><option value="ZarinPal">زرین‌پال</option>
+        </select>
+      </div>
+      <div class="card" style="padding:8px 18px">
+        <table><thead><tr><th>شناسه پرداخت</th><th>کاربر</th><th>مبلغ</th><th>درگاه</th><th>وضعیت</th><th>تاریخ</th><th>کد پیگیری</th></tr></thead>
+          <tbody id="payments-table"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- REVENUE -->
+    <section class="view" data-view="revenue">
+      <div class="topbar"><div><h1>درآمد</h1><div class="sub">گزارش مالی سیستم</div></div></div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="lbl">امروز</div><div class="num">۳٬۲۰۰٬۰۰۰</div></div>
+        <div class="stat-card"><div class="lbl">دیروز</div><div class="num">۲٬۸۵۰٬۰۰۰</div></div>
+        <div class="stat-card"><div class="lbl">این هفته</div><div class="num">۱۹٬۴۰۰٬۰۰۰</div></div>
+        <div class="stat-card"><div class="lbl">این ماه</div><div class="num">۸۵٬۲۰۰٬۰۰۰</div></div>
+        <div class="stat-card"><div class="lbl">امسال</div><div class="num">۶۱۲٬۰۰۰٬۰۰۰</div></div>
+        <div class="stat-card"><div class="lbl">کل (All Time)</div><div class="num">۱٬۴۵۰٬۰۰۰٬۰۰۰</div></div>
+        <div class="stat-card"><div class="lbl">پرداخت‌های موفق</div><div class="num" style="color:var(--success)">۱٬۹۸۰</div></div>
+        <div class="stat-card"><div class="lbl">پرداخت‌های ناموفق</div><div class="num" style="color:var(--danger)">۱۴</div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>درآمد ماهانه (۱۲ ماه اخیر)</h3></div>
+        <div class="bars" id="chart-revenue-yearly"></div>
+      </div>
+    </section>
+
+    <!-- NOTIFICATIONS -->
+    <section class="view" data-view="notifications">
+      <div class="topbar"><div><h1>اعلان‌ها</h1><div class="sub">ارسال اعلان به کاربران</div></div></div>
+      <div class="card" style="max-width:520px">
+        <div class="field"><label>عنوان</label><input id="ntf-title" type="text" placeholder="مثلاً: به‌روزرسانی جدید"></div>
+        <div class="field"><label>متن پیام</label><textarea id="ntf-message" rows="3" placeholder="متن اعلان..."></textarea></div>
+        <div class="field"><label>مخاطب</label>
+          <select id="ntf-target">
+            <option value="all">همهٔ کاربران</option>
+            <option value="owners">فقط صاحبان کامیون</option>
+            <option value="drivers">فقط رانندگان</option>
+            <option value="active_subscribers">مشترکین فعال</option>
+            <option value="expired_subscribers">مشترکین منقضی‌شده</option>
+            <option value="specific_user">یک کاربر مشخص</option>
+          </select>
+        </div>
+        <button class="btn" onclick="sendNotification()">ارسال اعلان</button>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>اعلان‌های ارسال‌شده</h3></div>
+        <table><thead><tr><th>عنوان</th><th>مخاطب</th><th>تعداد گیرنده</th><th>تاریخ</th></tr></thead>
+          <tbody id="notifications-table"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="view" data-view="settings">
+      <div class="topbar"><div><h1>تنظیمات</h1><div class="sub">پیکربندی سیستم و سرویس‌های خارجی</div></div></div>
+
+      <div class="section-title">پیامک (SMS)</div>
+      <div class="card" style="max-width:560px">
+        <div class="card-head"><h3>ملی‌پیامک</h3><span class="pill active" id="sms-status-pill">تنظیم‌نشده</span></div>
+        <div class="field"><label>نام کاربری</label><input id="sms-username" type="text" placeholder="نام کاربری پنل ملی‌پیامک"></div>
+        <div class="field"><label>رمز عبور</label><input id="sms-password" type="password" placeholder="••••••••"></div>
+        <div class="field"><label>API Key</label><input id="sms-apikey" type="text" placeholder="در صورت استفاده از API Key">
+          <div style="font-size:11.5px;color:var(--ink-faint);margin-top:5px">مقدار ذخیره‌شدهٔ فعلی: <span class="masked">••••••••1234</span></div>
+        </div>
+        <div class="field"><label>شمارهٔ فرستنده</label><input id="sms-sender" type="text" placeholder="3000xxxxxx" dir="ltr" style="text-align:left"></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn sm" style="flex:1" onclick="saveSmsSettings()">ذخیرهٔ تنظیمات</button>
+          <button class="btn ghost sm" style="flex:1" onclick="testSmsConnection()">تست اتصال</button>
+        </div>
+      </div>
+
+      <div class="section-title">درگاه پرداخت</div>
+      <div class="card" style="max-width:560px">
+        <div class="card-head"><h3>زرین‌پال</h3><span class="pill active" id="payment-status-pill">تنظیم‌نشده</span></div>
+        <div class="field"><label>Merchant ID</label><input id="pg-merchant" type="text" placeholder="00000000-0000-0000-0000-000000000000" dir="ltr" style="text-align:left"></div>
+        <div class="field"><label>API Key</label><input id="pg-apikey" type="text" placeholder="در صورت نیاز">
+          <div style="font-size:11.5px;color:var(--ink-faint);margin-top:5px">مقدار ذخیره‌شدهٔ فعلی: <span class="masked">••••••••ab12</span></div>
+        </div>
+        <div class="toggle-row"><span>حالت Sandbox (آزمایشی)</span><div class="switch" id="pg-sandbox-switch" onclick="this.classList.toggle('on')"><div class="knob"></div></div></div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn sm" style="flex:1" onclick="savePaymentSettings()">ذخیرهٔ تنظیمات</button>
+          <button class="btn ghost sm" style="flex:1" onclick="testPaymentConnection()">تست اتصال</button>
+        </div>
+      </div>
+
+      <div class="section-title">تنظیمات سیستم</div>
+      <div class="card" style="max-width:560px">
+        <div class="field"><label>نام برنامه</label><input id="sys-appname" type="text" value="TruckAccounting"></div>
+        <div class="field"><label>شماره تماس پشتیبانی</label><input id="sys-supportphone" type="text" dir="ltr" style="text-align:left" placeholder="021xxxxxxxx"></div>
+        <div class="field"><label>ایمیل پشتیبانی</label><input id="sys-supportemail" type="text" dir="ltr" style="text-align:left" placeholder="support@example.com"></div>
+        <div class="field"><label>حداقل نسخهٔ مجاز اپ</label><input id="sys-minversion" type="text" dir="ltr" style="text-align:left" placeholder="1.0.0"></div>
+        <div class="field"><label>آخرین نسخهٔ منتشرشده</label><input id="sys-latestversion" type="text" dir="ltr" style="text-align:left" placeholder="1.2.0"></div>
+        <div class="toggle-row"><span>حالت تعمیر و نگهداری (Maintenance Mode)</span><div class="switch" id="sys-maintenance-switch" onclick="this.classList.toggle('on')"><div class="knob"></div></div></div>
+        <button class="btn sm" style="margin-top:14px" onclick="toast('تنظیمات سیستم ذخیره شد')">ذخیرهٔ تنظیمات</button>
+      </div>
+
+      <div class="section-title">Feature Flags</div>
+      <div class="card" style="max-width:560px" id="feature-flags-card"></div>
+    </section>
+
+    <!-- AUDIT LOGS -->
+    <section class="view" data-view="audit">
+      <div class="topbar"><div><h1>Audit Log</h1><div class="sub">تاریخچهٔ کامل اقدامات ادمین‌ها</div></div></div>
+      <div class="card" style="padding:8px 18px">
+        <table><thead><tr><th>ادمین</th><th>عملیات</th><th>هدف</th><th>تاریخ</th></tr></thead>
+          <tbody id="audit-table"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ADMINS -->
+    <section class="view" data-view="admins">
+      <div class="topbar"><div><h1>ادمین‌ها</h1><div class="sub">مدیریت حساب‌های ادمین (فقط Super Admin)</div></div></div>
+      <div id="admins-guard"></div>
+      <div class="card" style="padding:8px 18px" id="admins-card">
+        <div class="card-head" style="padding:10px 0 0"><h3>لیست ادمین‌ها</h3><button class="btn sm" onclick="openAdminModal()">+ افزودن ادمین</button></div>
+        <table><thead><tr><th>نام</th><th>شماره موبایل</th><th>نقش</th><th>وضعیت</th></tr></thead>
+          <tbody id="admins-table"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- User detail modal -->
+<div class="modal-backdrop" id="user-modal">
+  <div class="modal">
+    <h2 id="um-name">—</h2>
+    <div class="tabs">
+      <div class="tab active" data-tab="profile" onclick="switchUserTab('profile')">پروفایل</div>
+      <div class="tab" data-tab="subscription" onclick="switchUserTab('subscription')">اشتراک</div>
+      <div class="tab" data-tab="activity" onclick="switchUserTab('activity')">فعالیت</div>
+    </div>
+    <div id="um-tab-profile">
+      <div class="kv"><span class="k">شماره موبایل</span><span class="v" id="um-phone" style="direction:ltr">—</span></div>
+      <div class="kv"><span class="k">نقش</span><span class="v" id="um-role">—</span></div>
+      <div class="kv"><span class="k">وضعیت</span><span class="v" id="um-status">—</span></div>
+      <div class="kv"><span class="k">تاریخ ثبت‌نام</span><span class="v" id="um-date">—</span></div>
+      <div class="kv"><span class="k">تعداد کامیون / راننده</span><span class="v" id="um-fleet">—</span></div>
+      <div style="display:flex;gap:8px;margin-top:16px">
+        <button class="btn sm" style="flex:1" id="um-toggle-btn" onclick="toggleUserStatus()">غیرفعال کردن</button>
+        <button class="btn ghost sm" style="flex:1" onclick="closeUserModal()">بستن</button>
+      </div>
+    </div>
+    <div id="um-tab-subscription" style="display:none">
+      <div class="kv"><span class="k">پلن فعلی</span><span class="v">Professional (۹۰ روزه)</span></div>
+      <div class="kv"><span class="k">وضعیت</span><span class="v"><span class="pill active">فعال</span></span></div>
+      <div class="kv"><span class="k">تاریخ انقضا</span><span class="v">۱۴۰۳/۰۹/۱۵</span></div>
+      <div class="kv"><span class="k">مجموع پرداخت‌ها</span><span class="v">۲۵۰٬۰۰۰ تومان</span></div>
+    </div>
+    <div id="um-tab-activity" style="display:none">
+      <div class="kv"><span class="k">آخرین ورود</span><span class="v">۲ ساعت پیش</span></div>
+      <div class="kv"><span class="k">تعداد سرویس ثبت‌شده</span><span class="v">۴۲</span></div>
+      <div class="kv"><span class="k">تعداد هزینهٔ ثبت‌شده</span><span class="v">۱۸</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Plan modal -->
+<div class="modal-backdrop" id="plan-modal">
+  <div class="modal" style="max-width:400px">
+    <h2>افزودن پلن اشتراک</h2>
+    <div class="field"><label>نام پلن</label><input id="plan-name" type="text" placeholder="مثلاً Basic"></div>
+    <div class="field"><label>مدت (روز)</label><input id="plan-duration" type="text" inputmode="numeric" placeholder="30"></div>
+    <div class="field"><label>قیمت (تومان)</label><input id="plan-price" type="text" inputmode="numeric" placeholder="100000"></div>
+    <div class="field"><label>توضیحات</label><textarea id="plan-desc" rows="2"></textarea></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn sm" style="flex:1" onclick="createPlan()">ایجاد پلن</button>
+      <button class="btn ghost sm" style="flex:1" onclick="closeModal('plan-modal')">انصراف</button>
+    </div>
+  </div>
+</div>
+
+<!-- Admin modal -->
+<div class="modal-backdrop" id="admin-modal">
+  <div class="modal" style="max-width:400px">
+    <h2>افزودن ادمین جدید</h2>
+    <div class="field"><label>نام و نام خانوادگی</label><input id="adm-name" type="text"></div>
+    <div class="field"><label>شماره موبایل</label><input id="adm-phone" type="tel" dir="ltr" style="text-align:left" placeholder="09xxxxxxxxx"></div>
+    <div class="field"><label>رمز عبور موقت</label><input id="adm-password" type="text" placeholder="حداقل ۸ کاراکتر"></div>
+    <div class="field"><label>نقش</label>
+      <select id="adm-role"><option value="ADMIN">Admin</option><option value="SUPPORT">Support</option><option value="ACCOUNTANT">Accountant</option><option value="SUPER_ADMIN">Super Admin</option></select>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn sm" style="flex:1" onclick="createAdmin()">ایجاد ادمین</button>
+      <button class="btn ghost sm" style="flex:1" onclick="closeModal('admin-modal')">انصراف</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===========================================================================
+   TruckAccounting Admin — UI Prototype (Phase 37)
+   این فایل فقط یک نمونهٔ ظاهری (UI Prototype) با داده‌های ساختگی (Mock) است.
+   هیچ اتصال واقعی به Backend یا هیچ Secret واقعی در این فایل وجود ندارد —
+   دقیقاً طبق محدودیت صریح Phase 37. نسخهٔ واقعی Android باید همهٔ این صفحات
+   را از طریق Endpointهای مستند در docs/ADMIN_APP.md بخواند.
+   =========================================================================== */
+
+function fa(n){ return String(n).replace(/[0-9]/g, d=>'۰۱۲۳۴۵۶۷۸۹'[d]); }
+function money(n){ return fa(Number(n).toLocaleString('en-US')) + ' تومان'; }
+
+let currentAdmin = null;
+
+/* ---------------- Mock data ---------------- */
+const ROLE_LABEL = { SUPER_ADMIN:'Super Admin', ADMIN:'Admin', SUPPORT:'Support', ACCOUNTANT:'Accountant' };
+const ROLE_PERMISSIONS = {
+  SUPER_ADMIN: ['USERS_VIEW','USERS_EDIT','OWNERS_VIEW','DRIVERS_VIEW','TRUCKS_VIEW','SUBSCRIPTIONS_VIEW','SUBSCRIPTIONS_EDIT','ORDERS_VIEW','PAYMENTS_VIEW','REVENUE_VIEW','SMS_SETTINGS_VIEW','SMS_SETTINGS_EDIT','PAYMENT_SETTINGS_VIEW','PAYMENT_SETTINGS_EDIT','SYSTEM_SETTINGS_VIEW','SYSTEM_SETTINGS_EDIT','ADMIN_MANAGEMENT','AUDIT_LOG_VIEW','NOTIFICATIONS_VIEW','NOTIFICATIONS_MANAGE'],
+  ADMIN: ['USERS_VIEW','USERS_EDIT','OWNERS_VIEW','DRIVERS_VIEW','TRUCKS_VIEW','SUBSCRIPTIONS_VIEW','SUBSCRIPTIONS_EDIT','ORDERS_VIEW','PAYMENTS_VIEW','REVENUE_VIEW','AUDIT_LOG_VIEW','NOTIFICATIONS_VIEW','NOTIFICATIONS_MANAGE'],
+  SUPPORT: ['USERS_VIEW','OWNERS_VIEW','DRIVERS_VIEW','TRUCKS_VIEW'],
+  ACCOUNTANT: ['SUBSCRIPTIONS_VIEW','ORDERS_VIEW','PAYMENTS_VIEW','REVENUE_VIEW'],
+};
+const NAV_ITEMS = [
+  {id:'dashboard', label:'داشبورد', perm:null},
+  {id:'users', label:'کاربران', perm:'USERS_VIEW'},
+  {id:'owners', label:'صاحبان کامیون', perm:'OWNERS_VIEW'},
+  {id:'drivers', label:'رانندگان', perm:'DRIVERS_VIEW'},
+  {id:'trucks', label:'کامیون‌ها', perm:'TRUCKS_VIEW'},
+  {id:'subscriptions', label:'اشتراک‌ها', perm:'SUBSCRIPTIONS_VIEW'},
+  {id:'orders', label:'سفارش‌ها', perm:'ORDERS_VIEW'},
+  {id:'payments', label:'پرداخت‌ها', perm:'PAYMENTS_VIEW'},
+  {id:'revenue', label:'درآمد', perm:'REVENUE_VIEW'},
+  {id:'notifications', label:'اعلان‌ها', perm:'NOTIFICATIONS_VIEW'},
+  {id:'settings', label:'تنظیمات', perm:'SYSTEM_SETTINGS_VIEW'},
+  {id:'audit', label:'Audit Log', perm:'AUDIT_LOG_VIEW'},
+  {id:'admins', label:'ادمین‌ها', perm:'ADMIN_MANAGEMENT'},
+];
+const NAV_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.8"/></svg>';
+
+const mockUsers = [
+  {id:'u1', name:'محمد احمدی', phone:'09121110001', role:'owner', status:'active', date:'1403/04/12', sub:'active', trucks:3, drivers:2},
+  {id:'u2', name:'علی رضایی', phone:'09121110002', role:'driver', status:'active', date:'1403/04/15', sub:null, trucks:0, drivers:0},
+  {id:'u3', name:'حسین کریمی', phone:'09121110003', role:'owner', status:'suspended', date:'1403/03/02', sub:'expired', trucks:1, drivers:1},
+  {id:'u4', name:'زهرا نجفی', phone:'09121110004', role:'driver', status:'active', date:'1403/05/20', sub:null, trucks:0, drivers:0},
+  {id:'u5', name:'رضا موسوی', phone:'09121110005', role:'owner', status:'active', date:'1403/06/01', sub:'pending', trucks:2, drivers:0},
+];
+const mockOwners = [
+  {name:'محمد احمدی', phone:'09121110001', trucks:3, drivers:2, sub:'active'},
+  {name:'حسین کریمی', phone:'09121110003', trucks:1, drivers:1, sub:'expired'},
+  {name:'رضا موسوی', phone:'09121110005', trucks:2, drivers:0, sub:'pending'},
+];
+const mockDrivers = [
+  {name:'علی رضایی', phone:'09121110002', owner:'محمد احمدی', truck:'22 الف 262 ایران 22', status:'active'},
+  {name:'زهرا نجفی', phone:'09121110004', owner:'—', truck:'—', status:'pending'},
+];
+const mockTrucks = [
+  {plate:'22 الف 262 ایران 22', model:'ولوو FH — 1401', owner:'محمد احمدی', driver:'علی رضایی', status:'active'},
+  {plate:'88 ب 910 ایران 10', model:'اسکانیا R — 1398', owner:'محمد احمدی', driver:'—', status:'active'},
+  {plate:'15 د 340 ایران 15', model:'ولوو FM — 1399', owner:'حسین کریمی', driver:'—', status:'active'},
+];
+const mockSubs = [
+  {user:'محمد احمدی', plan:'Professional', status:'active', start:'1403/06/01', end:'1403/09/01'},
+  {user:'حسین کریمی', plan:'Basic', status:'expired', start:'1403/02/01', end:'1403/03/01'},
+  {user:'رضا موسوی', plan:'Professional', status:'pending', start:'—', end:'—'},
+];
+let mockPlans = [
+  {id:'p1', name:'Basic', duration:30, price:100000, active:true},
+  {id:'p2', name:'Professional', duration:90, price:250000, active:true},
+  {id:'p3', name:'Enterprise', duration:365, price:900000, active:false},
+];
+const mockOrders = [
+  {id:'ORD-1001', user:'محمد احمدی', plan:'Professional', amount:250000, status:'PAID', date:'1403/06/01'},
+  {id:'ORD-1002', user:'حسین کریمی', plan:'Basic', amount:100000, status:'FAILED', date:'1403/05/28'},
+  {id:'ORD-1003', user:'رضا موسوی', plan:'Professional', amount:250000, status:'PENDING', date:'1403/06/10'},
+];
+const mockPayments = [
+  {id:'PAY-5001', user:'محمد احمدی', amount:250000, provider:'ZarinPal', status:'successful', date:'1403/06/01', ref:'A00019283'},
+  {id:'PAY-5002', user:'حسین کریمی', amount:100000, provider:'ZarinPal', status:'failed', date:'1403/05/28', ref:'—'},
+  {id:'PAY-5003', user:'رضا موسوی', amount:250000, provider:'ZarinPal', status:'pending', date:'1403/06/10', ref:'—'},
+];
+let mockNotifications = [
+  {title:'به‌روزرسانی نسخهٔ جدید', target:'همهٔ کاربران', count:1248, date:'1403/06/05'},
+];
+let mockAudit = [
+  {admin:'Super Admin', action:'ADMIN_UPDATE_PLAN', target:'Professional', date:'1403/06/09 14:20'},
+  {admin:'Super Admin', action:'ADMIN_SUSPEND_USER', target:'حسین کریمی', date:'1403/06/08 11:05'},
+  {admin:'Ali (Admin)', action:'ADMIN_CREATE_NOTIFICATION', target:'همهٔ کاربران', date:'1403/06/05 09:40'},
+];
+let mockAdmins = [
+  {id:'a1', name:'Super Admin', phone:'09120000001', role:'SUPER_ADMIN', active:true},
+  {id:'a2', name:'Ali (Admin)', phone:'09120000002', role:'ADMIN', active:true},
+  {id:'a3', name:'Sara (Support)', phone:'09120000003', role:'SUPPORT', active:true},
+];
+let smsConfigured = false, paymentConfigured = false;
+const featureFlags = {ENABLE_SUBSCRIPTION:true, ENABLE_PAYMENT:true, ENABLE_SMS:true, ENABLE_NEW_DASHBOARD:false};
+
+function hasPerm(perm){ return !perm || (ROLE_PERMISSIONS[currentAdmin.role]||[]).includes(perm); }
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+function login(){
+  const phone = document.getElementById('lg-phone').value.trim();
+  const role = document.getElementById('lg-role').value;
+  if(!phone){ toast('شماره موبایل را وارد کنید'); return; }
+  currentAdmin = { name: role==='SUPER_ADMIN' ? 'Super Admin' : ROLE_LABEL[role], phone, role };
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app-shell').classList.add('active');
+  document.getElementById('cur-admin-name').textContent = currentAdmin.name;
+  document.getElementById('cur-admin-role').textContent = ROLE_LABEL[role];
+  document.getElementById('cur-admin-av').textContent = currentAdmin.name.charAt(0);
+  buildNav();
+  renderAll();
+  goView('dashboard');
+}
+function logout(){
+  currentAdmin = null;
+  document.getElementById('app-shell').classList.remove('active');
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+function buildNav(){
+  const el = document.getElementById('nav-list');
+  el.innerHTML = NAV_ITEMS.filter(n=>hasPerm(n.perm)).map(n=>
+    `<div class="nav-item" data-nav="${n.id}" onclick="goView('${n.id}')">${NAV_ICON}<span>${n.label}</span></div>`
+  ).join('');
+}
+function goView(id){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.nav===id));
+  const view = document.querySelector(`.view[data-view="${id}"]`);
+  if(view) view.classList.add('active');
+  window.scrollTo(0,0);
+}
+
+/* ---------------- Renderers ---------------- */
+function renderAll(){
+  renderDashboardCharts();
+  renderDashRecent();
+  renderUsers();
+  renderOwners();
+  renderDrivers();
+  renderTrucks();
+  renderSubscriptions();
+  renderPlans();
+  renderOrders();
+  renderPayments();
+  renderRevenueChart();
+  renderNotifications();
+  renderFeatureFlags();
+  renderAudit();
+  renderAdmins();
+}
+
+function bars(containerId, values, cls){
+  const max = Math.max(...values, 1);
+  document.getElementById(containerId).innerHTML = values.map(v=>{
+    const pct = Math.round((v/max)*100);
+    return `<div class="bar ${cls||''}"><b style="height:${pct}%"></b></div>`;
+  }).join('');
+}
+function renderDashboardCharts(){
+  bars('chart-users', [4,6,3,8,5,9,7,10,6,12,9,14,11,15]);
+  bars('chart-revenue', [1.2,1.8,1.1,2.4,1.9,2.8,2.1,3.2,2.6,3.8,3.1,4.2,3.6,4.5], 'rev');
+}
+function renderRevenueChart(){
+  bars('chart-revenue-yearly', [22,28,19,35,30,42,38,45,40,52,48,60], 'rev');
+}
+function renderDashRecent(){
+  document.getElementById('dash-recent-users').innerHTML = mockUsers.slice(0,4).map(u=>`
+    <tr class="clickable" onclick="openUserModal('${u.id}')">
+      <td>${u.name}</td><td style="direction:ltr;text-align:right">${u.phone}</td>
+      <td><span class="pill role">${u.role==='owner'?'صاحب کامیون':'راننده'}</span></td><td>${u.date}</td>
+    </tr>`).join('');
+}
+
+function statusPill(status, labels){
+  const map = labels || {active:'فعال', expired:'منقضی', pending:'در انتظار', cancelled:'لغوشده', suspended:'غیرفعال', successful:'موفق', failed:'ناموفق', PAID:'پرداخت‌شده', FAILED:'ناموفق', PENDING:'در انتظار', CANCELLED:'لغوشده'};
+  const cls = {active:'active', successful:'active', PAID:'active', expired:'expired', failed:'expired', FAILED:'expired', suspended:'expired', cancelled:'expired', CANCELLED:'expired', pending:'pending', PENDING:'pending'}[status] || '';
+  return `<span class="pill ${cls}">${map[status]||status}</span>`;
+}
+
+function renderUsers(){
+  const search = (document.getElementById('user-search')?.value || '').trim();
+  const roleFilter = document.getElementById('user-role-filter')?.value || '';
+  const statusFilter = document.getElementById('user-status-filter')?.value || '';
+  const rows = mockUsers.filter(u=>
+    (!search || u.name.includes(search) || u.phone.includes(search)) &&
+    (!roleFilter || u.role===roleFilter) &&
+    (!statusFilter || u.status===statusFilter)
+  );
+  document.getElementById('users-table').innerHTML = rows.length ? rows.map(u=>`
+    <tr class="clickable" onclick="openUserModal('${u.id}')">
+      <td>${u.name}</td><td style="direction:ltr;text-align:right">${u.phone}</td>
+      <td><span class="pill role">${u.role==='owner'?'صاحب کامیون':'راننده'}</span></td>
+      <td>${statusPill(u.status)}</td><td>${u.date}</td>
+      <td>${u.sub ? statusPill(u.sub) : '—'}</td>
+    </tr>`).join('') : `<tr><td colspan="6"><div class="empty">کاربری با این مشخصات پیدا نشد — No users found</div></td></tr>`;
+}
+function renderOwners(){
+  document.getElementById('owners-table').innerHTML = mockOwners.map(o=>`
+    <tr><td>${o.name}</td><td style="direction:ltr;text-align:right">${o.phone}</td>
+    <td>${fa(o.trucks)}</td><td>${fa(o.drivers)}</td><td>${statusPill(o.sub)}</td></tr>`).join('');
+}
+function renderDrivers(){
+  document.getElementById('drivers-table').innerHTML = mockDrivers.map(d=>`
+    <tr><td>${d.name}</td><td style="direction:ltr;text-align:right">${d.phone}</td>
+    <td>${d.owner}</td><td>${d.truck}</td><td>${statusPill(d.status)}</td></tr>`).join('');
+}
+function renderTrucks(){
+  document.getElementById('trucks-table').innerHTML = mockTrucks.map(t=>`
+    <tr><td style="direction:ltr;text-align:right">${t.plate}</td><td>${t.model}</td>
+    <td>${t.owner}</td><td>${t.driver}</td><td>${statusPill(t.status)}</td></tr>`).join('');
+}
+function renderSubscriptions(){
+  const filter = document.getElementById('sub-status-filter')?.value || '';
+  const rows = mockSubs.filter(s=>!filter || s.status===filter);
+  document.getElementById('subs-table').innerHTML = rows.length ? rows.map(s=>`
+    <tr><td>${s.user}</td><td>${s.plan}</td><td>${statusPill(s.status)}</td><td>${s.start}</td><td>${s.end}</td></tr>`).join('')
+    : `<tr><td colspan="5"><div class="empty">اشتراکی با این وضعیت پیدا نشد</div></td></tr>`;
+}
+function renderPlans(){
+  document.getElementById('plans-table').innerHTML = mockPlans.map(p=>`
+    <tr><td>${p.name}</td><td>${fa(p.duration)} روز</td><td>${money(p.price)}</td>
+    <td>${p.active ? statusPill('active') : statusPill('cancelled', {cancelled:'غیرفعال'})}</td>
+    <td><button class="btn ghost sm" onclick="togglePlan('${p.id}')">${p.active?'غیرفعال کردن':'فعال کردن'}</button></td></tr>`).join('');
+}
+function renderOrders(){
+  document.getElementById('orders-table').innerHTML = mockOrders.map(o=>`
+    <tr><td style="direction:ltr;text-align:right">${o.id}</td><td>${o.user}</td><td>${o.plan}</td>
+    <td>${money(o.amount)}</td><td>${statusPill(o.status)}</td><td>${o.date}</td></tr>`).join('');
+}
+function renderPayments(){
+  const statusFilter = document.getElementById('pay-status-filter')?.value || '';
+  const providerFilter = document.getElementById('pay-provider-filter')?.value || '';
+  const rows = mockPayments.filter(p=>(!statusFilter || p.status===statusFilter) && (!providerFilter || p.provider===providerFilter));
+  document.getElementById('payments-table').innerHTML = rows.length ? rows.map(p=>`
+    <tr><td style="direction:ltr;text-align:right">${p.id}</td><td>${p.user}</td><td>${money(p.amount)}</td>
+    <td>${p.provider}</td><td>${statusPill(p.status)}</td><td>${p.date}</td><td style="direction:ltr;text-align:right">${p.ref}</td></tr>`).join('')
+    : `<tr><td colspan="7"><div class="empty">پرداختی با این فیلتر یافت نشد</div></td></tr>`;
+}
+function renderNotifications(){
+  document.getElementById('notifications-table').innerHTML = mockNotifications.length ? mockNotifications.map(n=>`
+    <tr><td>${n.title}</td><td>${n.target}</td><td>${fa(n.count)}</td><td>${n.date}</td></tr>`).join('')
+    : `<tr><td colspan="4"><div class="empty">هنوز اعلانی ارسال نشده است</div></td></tr>`;
+}
+function renderFeatureFlags(){
+  const labels = {ENABLE_SUBSCRIPTION:'فعال‌سازی سیستم اشتراک', ENABLE_PAYMENT:'فعال‌سازی درگاه پرداخت', ENABLE_SMS:'فعال‌سازی پیامک', ENABLE_NEW_DASHBOARD:'داشبورد نسخهٔ جدید (Beta)'};
+  document.getElementById('feature-flags-card').innerHTML = Object.keys(featureFlags).map(key=>`
+    <div class="toggle-row"><span>${labels[key]}</span>
+      <div class="switch ${featureFlags[key]?'on':''}" onclick="toggleFlag('${key}', this)"><div class="knob"></div></div>
+    </div>`).join('');
+}
+function renderAudit(){
+  document.getElementById('audit-table').innerHTML = mockAudit.map(a=>`
+    <tr><td>${a.admin}</td><td style="direction:ltr;text-align:right;font-family:monospace;font-size:11.5px">${a.action}</td>
+    <td>${a.target}</td><td>${a.date}</td></tr>`).join('');
+}
+function renderAdmins(){
+  const guard = document.getElementById('admins-guard');
+  const card = document.getElementById('admins-card');
+  if(currentAdmin && currentAdmin.role !== 'SUPER_ADMIN'){
+    guard.innerHTML = `<div class="card"><div class="empty">این بخش فقط برای Super Admin در دسترس است.</div></div>`;
+    card.style.display = 'none';
+    return;
+  }
+  guard.innerHTML = ''; card.style.display = 'block';
+  document.getElementById('admins-table').innerHTML = mockAdmins.map(a=>`
+    <tr><td>${a.name}</td><td style="direction:ltr;text-align:right">${a.phone}</td>
+    <td><span class="pill role">${ROLE_LABEL[a.role]}</span></td>
+    <td>${a.active ? statusPill('active') : statusPill('suspended')}</td></tr>`).join('');
+}
+
+/* ---------------- Actions ---------------- */
+let openUserId = null;
+function openUserModal(id){
+  const u = mockUsers.find(x=>x.id===id);
+  if(!u) return;
+  openUserId = id;
+  document.getElementById('um-name').textContent = u.name;
+  document.getElementById('um-phone').textContent = u.phone;
+  document.getElementById('um-role').textContent = u.role==='owner' ? 'صاحب کامیون' : 'راننده';
+  document.getElementById('um-status').innerHTML = statusPill(u.status);
+  document.getElementById('um-date').textContent = u.date;
+  document.getElementById('um-fleet').textContent = `${fa(u.trucks)} کامیون / ${fa(u.drivers)} راننده`;
+  document.getElementById('um-toggle-btn').textContent = u.status==='active' ? 'غیرفعال کردن حساب' : 'فعال‌سازی حساب';
+  document.getElementById('um-toggle-btn').className = 'btn sm ' + (u.status==='active' ? 'danger' : '');
+  switchUserTab('profile');
+  document.getElementById('user-modal').classList.add('show');
+}
+function closeUserModal(){ document.getElementById('user-modal').classList.remove('show'); }
+function switchUserTab(tab){
+  document.querySelectorAll('#user-modal .tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===tab));
+  ['profile','subscription','activity'].forEach(t=>{ document.getElementById('um-tab-'+t).style.display = t===tab ? 'block':'none'; });
+}
+function toggleUserStatus(){
+  if(!hasPerm('USERS_EDIT')){ toast('شما دسترسی USERS_EDIT ندارید'); return; }
+  const u = mockUsers.find(x=>x.id===openUserId);
+  if(!u) return;
+  u.status = u.status==='active' ? 'suspended' : 'active';
+  renderUsers(); openUserModal(openUserId);
+  toast(u.status==='active' ? 'حساب فعال شد' : 'حساب غیرفعال شد');
+}
+
+function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+function openPlanModal(){
+  if(!hasPerm('SUBSCRIPTIONS_EDIT')){ toast('شما دسترسی SUBSCRIPTIONS_EDIT ندارید'); return; }
+  document.getElementById('plan-name').value='';
+  document.getElementById('plan-duration').value='';
+  document.getElementById('plan-price').value='';
+  document.getElementById('plan-desc').value='';
+  document.getElementById('plan-modal').classList.add('show');
+}
+function createPlan(){
+  const name = document.getElementById('plan-name').value.trim();
+  const duration = parseInt(document.getElementById('plan-duration').value,10);
+  const price = parseInt(document.getElementById('plan-price').value,10);
+  if(!name || !duration || !price){ toast('همهٔ فیلدهای الزامی را پر کنید'); return; }
+  mockPlans.push({id:'p'+(mockPlans.length+1), name, duration, price, active:true});
+  renderPlans();
+  closeModal('plan-modal');
+  toast('پلن جدید ایجاد شد');
+}
+function togglePlan(id){
+  if(!hasPerm('SUBSCRIPTIONS_EDIT')){ toast('شما دسترسی SUBSCRIPTIONS_EDIT ندارید'); return; }
+  const p = mockPlans.find(x=>x.id===id);
+  p.active = !p.active;
+  renderPlans();
+}
+
+function sendNotification(){
+  if(!hasPerm('NOTIFICATIONS_MANAGE')){ toast('شما دسترسی ارسال اعلان ندارید'); return; }
+  const title = document.getElementById('ntf-title').value.trim();
+  const message = document.getElementById('ntf-message').value.trim();
+  const target = document.getElementById('ntf-target').value;
+  if(!title || !message){ toast('عنوان و متن پیام را وارد کنید'); return; }
+  const targetLabels = {all:'همهٔ کاربران', owners:'صاحبان کامیون', drivers:'رانندگان', active_subscribers:'مشترکین فعال', expired_subscribers:'مشترکین منقضی‌شده', specific_user:'یک کاربر مشخص'};
+  const count = target==='all' ? mockUsers.length : target==='owners' ? mockUsers.filter(u=>u.role==='owner').length : target==='drivers' ? mockUsers.filter(u=>u.role==='driver').length : Math.floor(mockUsers.length/2);
+  mockNotifications.unshift({title, target: targetLabels[target], count, date:'اکنون'});
+  renderNotifications();
+  document.getElementById('ntf-title').value=''; document.getElementById('ntf-message').value='';
+  toast(`اعلان برای ${fa(count)} کاربر ارسال شد`);
+}
+
+function saveSmsSettings(){
+  if(!hasPerm('SMS_SETTINGS_EDIT')){ toast('شما دسترسی SMS_SETTINGS_EDIT ندارید'); return; }
+  smsConfigured = true;
+  document.getElementById('sms-status-pill').outerHTML = '<span class="pill active" id="sms-status-pill">فعال</span>';
+  toast('تنظیمات پیامک ذخیره شد (رمزنگاری‌شده در Backend)');
+}
+function testSmsConnection(){
+  if(!smsConfigured){ toast('ابتدا اطلاعات ملی‌پیامک را ذخیره کنید — Connection Failed'); return; }
+  toast('Connected — اتصال به ملی‌پیامک برقرار است');
+}
+function savePaymentSettings(){
+  if(!hasPerm('PAYMENT_SETTINGS_EDIT')){ toast('شما دسترسی PAYMENT_SETTINGS_EDIT ندارید'); return; }
+  paymentConfigured = true;
+  document.getElementById('payment-status-pill').outerHTML = '<span class="pill active" id="payment-status-pill">فعال</span>';
+  toast('تنظیمات درگاه پرداخت ذخیره شد (رمزنگاری‌شده در Backend)');
+}
+function testPaymentConnection(){
+  if(!paymentConfigured){ toast('ابتدا Merchant ID را ذخیره کنید — Connection Failed'); return; }
+  toast('Connected — اتصال به زرین‌پال برقرار است');
+}
+function toggleFlag(key, el){
+  if(!hasPerm('SYSTEM_SETTINGS_EDIT')){ toast('شما دسترسی SYSTEM_SETTINGS_EDIT ندارید'); return; }
+  featureFlags[key] = !featureFlags[key];
+  el.classList.toggle('on');
+  toast(`${key} ${featureFlags[key] ? 'فعال' : 'غیرفعال'} شد`);
+}
+
+function openAdminModal(){
+  if(!hasPerm('ADMIN_MANAGEMENT')){ toast('این بخش فقط برای Super Admin است'); return; }
+  document.getElementById('adm-name').value='';
+  document.getElementById('adm-phone').value='';
+  document.getElementById('adm-password').value='';
+  document.getElementById('admin-modal').classList.add('show');
+}
+function createAdmin(){
+  const name = document.getElementById('adm-name').value.trim();
+  const phone = document.getElementById('adm-phone').value.trim();
+  const role = document.getElementById('adm-role').value;
+  if(!name || !phone){ toast('نام و شماره موبایل را وارد کنید'); return; }
+  mockAdmins.push({id:'a'+(mockAdmins.length+1), name, phone, role, active:true});
+  renderAdmins();
+  closeModal('admin-modal');
+  toast('ادمین جدید ایجاد شد');
+}
+
+/* ---------------- Init ---------------- */
+document.getElementById('lg-role').addEventListener('change', ()=>{});
+</script>
+</body>
+</html>

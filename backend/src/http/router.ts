@@ -10,6 +10,10 @@ export interface RequestContext {
    *  public routes or when no/invalid token was supplied. */
   userId?: string;
   role?: 'owner' | 'driver';
+  /** Populated by requireAdminAuth (a SEPARATE middleware, verified with a separate JWT secret —
+   *  see admin.middleware.ts) — never set on the same request as userId/role above. */
+  adminId?: string;
+  adminRole?: 'SUPER_ADMIN' | 'ADMIN' | 'SUPPORT' | 'ACCOUNTANT';
 }
 
 export type Handler = (ctx: RequestContext) => Promise<void>;

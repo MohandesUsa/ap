@@ -1,8 +1,8 @@
 import { createHmac, timingSafeEqual, randomUUID } from 'node:crypto';
 
 export interface JwtPayload {
-  sub: string; // user id
-  role: 'owner' | 'driver';
+  sub: string; // user or admin id
+  role: 'owner' | 'driver' | 'SUPER_ADMIN' | 'ADMIN' | 'SUPPORT' | 'ACCOUNTANT';
   iat: number;
   exp: number;
   [key: string]: unknown;

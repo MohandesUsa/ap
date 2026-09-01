@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Deliberately a different palette from the User App's owner-orange/driver-teal (see
+         android/core/designsystem/theme/Color.kt) — a visually distinct identity reinforces that
+         this is a different application, not a reskin of the same one. Matches admin-preview.html. -->
+    <color name="primary">#4B4FE0</color>
+    <color name="primary_dark">#3A3DBD</color>
+    <color name="bg_app">#F3F4F8</color>
+</resources>

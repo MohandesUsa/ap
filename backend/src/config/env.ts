@@ -12,6 +12,16 @@ export interface AppConfig {
   refreshTokenTtlSeconds: number;
   invitationTtlSeconds: number;
   authRateLimit: { maxRequests: number; windowMs: number };
+  // --- Admin App (Phase A) ---
+  // A DIFFERENT secret from jwtSecret/jwtRefreshSecret — not just a different TTL — is the actual
+  // security boundary that makes a normal Owner/Driver access token unusable against any /admin/*
+  // route: verifyJwt(userToken, adminJwtSecret) fails signature verification outright, before any
+  // role check even runs. See admin-auth/admin.middleware.ts.
+  adminJwtSecret: string;
+  adminAccessTokenTtlSeconds: number;
+  /** 32-byte (64 hex char) key for AES-256-GCM encryption of secrets at rest (SMS/payment
+   *  provider API keys) — see security/secretCrypto.ts. Never reused for JWT signing. */
+  encryptionKey: string;
 }
 
 function requireEnv(name: string): string {
@@ -35,5 +45,8 @@ export function loadConfig(): AppConfig {
       maxRequests: Number(process.env.AUTH_RATE_LIMIT_MAX ?? 10),
       windowMs: Number(process.env.AUTH_RATE_LIMIT_WINDOW_MS ?? 60_000),
     },
+    adminJwtSecret: requireEnv('ADMIN_JWT_SECRET'),
+    adminAccessTokenTtlSeconds: Number(process.env.ADMIN_ACCESS_TOKEN_TTL_SECONDS ?? 60 * 60 * 8), // 8 hours
+    encryptionKey: requireEnv('ENCRYPTION_KEY'),
   };
 }

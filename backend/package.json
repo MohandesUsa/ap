@@ -11,7 +11,8 @@
     "start": "node src/index.ts",
     "dev": "node --watch src/index.ts",
     "test": "node --test test/*.test.ts",
-    "migrate": "node scripts/migrate.ts"
+    "migrate": "node scripts/migrate.ts",
+    "create-admin": "node scripts/create-admin.ts"
   },
   "dependencies": {
     "mysql2": "^3.24.2"

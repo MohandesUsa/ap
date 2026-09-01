@@ -4,8 +4,9 @@
 
 ```
 TruckAccounting/
-├── android/     ← پروژه واقعی Android (Phase 2 + اتصال واقعی به Backend در Phase 3)
-├── backend/     ← Backend واقعی روی MySQL/MariaDB (Phase 3، دیتابیس در Phase 3.1 عوض شد) — README مخصوص خودش را ببینید
+├── android/     ← پروژه واقعی Android — اپ کاربران (Owner/Driver), Phase 2 + اتصال به Backend در Phase 3
+├── backend/     ← Backend واقعی روی MySQL/MariaDB (Phase 3، دیتابیس در Phase 3.1 عوض شد) — همان Backend به admin/ هم سرویس می‌دهد
+├── admin/       ← Admin App مستقل (Super Admin/Admin/Support/Accountant) — README مخصوص خودش را ببینید
 ├── web/         ← نسخهٔ وب پیش‌نمایش (برای دیدن سریع UI روی سرور، جدا از اپ اندروید)
 └── docs/
     ├── ARCHITECTURE.md      ← سند معماری تأییدشدهٔ Phase 1
@@ -112,6 +113,16 @@ android/
 - ❌ سیستم پرداخت واقعی (درگاه بانکی) — ثبت پرداخت در Phase 4 فقط یک رکورد دستی داخلی است، نه اتصال به یک درگاه واقعی.
 - ❌ اتصال اپ Android به Endpointهای حسابداری/تسویه/حقوق راننده که در Phase 4 به Backend اضافه شدند — این Endpointها الان واقعاً وجود دارند و تست شده‌اند (پایین همین بخش)، اما Retrofit API + Repository + ViewModel سمت Android هنوز به آن‌ها وصل نشده‌اند؛ `feature/owner/data/DriverRepositoryImpl.kt` هنوز فقط Room محلی است.
 - ❌ Sync پیشرفتهٔ Offline کامل (WorkManager) — فقط الگوی Cache-با-تازه‌سازی ساده در TruckRepositoryImpl پیاده شده.
+
+---
+
+## Phase A — Admin App (اپلیکیشن مدیریت مرکزی)
+
+یک اپلیکیشن Android **دوم و مستقل** (`admin/`) برای Super Admin/Admin/Support/Accountant، متصل به همان Backend و همان دیتابیس مرکزی — نه یک اپ یا دیتابیس جدا. جزئیات کامل (معماری، RBAC، Endpointها، محدودیت‌های شناخته‌شده) در `admin/README.md`؛ خلاصه:
+
+- **Backend + RBAC**: کامل و واقعاً تست‌شده — ۸۴ تست (۳۵ تای جدید) روی SQLite **و** روی MariaDB واقعی، شامل هر سناریوی منفی امنیتی مشخص‌شده (توکن کاربر روی API ادمین، SUPPORT روی تنظیمات پرداخت، ACCOUNTANT روی Secret پیامک، و غیره) — همه رد شدند، دقیقاً همان‌طور که باید.
+- **`admin/admin-preview.html`**: پیش‌نمایش کامل UI (Dashboard، کاربران، اشتراک‌ها، تنظیمات SMS/Payment، Audit Log، مدیریت ادمین‌ها)، تست‌شده با ۲۷ سناریوی Playwright، بدون هیچ Secret واقعی.
+- **اپ اندروید Admin**: فقط یک Skeleton با دو صفحهٔ واقعی (ورود + داشبورد) — یک پروژهٔ Gradle کاملاً جدا از `android/` تا هیچ ریسکی برای اپ کاربران نداشته باشد. هرگز Build نشده (بدون Android SDK در این محیط).
 
 ---
 

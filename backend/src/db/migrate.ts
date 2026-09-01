@@ -35,9 +35,19 @@ export async function runMigrations(db: DbClient): Promise<string[]> {
   for (const file of files) {
     if (applied.has(file)) continue;
 
-    const sql = readFileSync(join(MIGRATIONS_DIR, file), 'utf-8');
-    // Split on statement boundaries: semicolon at end of line, ignoring semicolons inside
-    // string literals is not a concern here since our migrations never embed one.
+    const rawSql = readFileSync(join(MIGRATIONS_DIR, file), 'utf-8');
+    // Strip `-- ...` line comments BEFORE splitting on `;` — a semicolon used as ordinary
+    // punctuation in a comment's prose (this has happened twice already) would otherwise split
+    // the file mid-statement and fail with a confusing "statement has been finalized"/syntax
+    // error that points nowhere near the real cause. String literals are still not a concern
+    // (migrations here never embed a semicolon inside one).
+    const sql = rawSql
+      .split('\n')
+      .map((line) => {
+        const commentIdx = line.indexOf('--');
+        return commentIdx === -1 ? line : line.slice(0, commentIdx);
+      })
+      .join('\n');
     const statements = sql
       .split(';')
       .map((s) => s.trim())

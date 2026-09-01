@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Compose (see ui/theme in MainActivity) owns real theming; this XML theme only matters
+         before Compose attaches (no SplashScreen library dependency here — a simpler, lower-
+         priority app than the User App per this session's own scoping, see admin/README.md). -->
+    <style name="Theme.TruckAccountingAdmin" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@color/bg_app</item>
+        <item name="android:windowBackground">@color/bg_app</item>
+    </style>
+</resources>
