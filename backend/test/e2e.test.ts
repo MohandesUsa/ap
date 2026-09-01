@@ -10,13 +10,13 @@ describe('End-to-end scenario (Phase 3 §36)', () => {
   test('full 12-step Owner + Driver + Truck + Invitation + re-login flow', async () => {
     // 1. Create Owner
     const register = await apiCall(app.baseUrl, 'POST', '/auth/register', {
-      body: { phoneNumber: '09150000001', password: 'owner-pass', fullName: 'صاحب کامیون تست', role: 'owner' },
+      body: { phoneNumber: '09150000001', password: 'owner-pass', fullName: 'صاحب کامیون تست', role: 'owner', deviceId: 'device-09150000001' },
     });
     assert.equal(register.status, 201);
 
     // 2. Login Owner
     const login = await apiCall(app.baseUrl, 'POST', '/auth/login', {
-      body: { phoneNumber: '09150000001', password: 'owner-pass' },
+      body: { phoneNumber: '09150000001', password: 'owner-pass', deviceId: 'device-09150000001' },
     });
     assert.equal(login.status, 200);
     const ownerAccessToken = (login.body as any).accessToken;
@@ -40,7 +40,7 @@ describe('End-to-end scenario (Phase 3 §36)', () => {
 
     // 5. Create Driver Account
     const driverRegister = await apiCall(app.baseUrl, 'POST', '/auth/register', {
-      body: { phoneNumber: '09150000002', password: 'driver-pass', fullName: 'راننده تست', role: 'driver' },
+      body: { phoneNumber: '09150000002', password: 'driver-pass', fullName: 'راننده تست', role: 'driver', deviceId: 'device-09150000002' },
     });
     assert.equal(driverRegister.status, 201);
     const driverAccessToken = (driverRegister.body as any).accessToken;
@@ -85,7 +85,7 @@ describe('End-to-end scenario (Phase 3 §36)', () => {
 
     // 11. Login again
     const reLogin = await apiCall(app.baseUrl, 'POST', '/auth/login', {
-      body: { phoneNumber: '09150000001', password: 'owner-pass' },
+      body: { phoneNumber: '09150000001', password: 'owner-pass', deviceId: 'device-09150000001' },
     });
     assert.equal(reLogin.status, 200);
     const newAccessToken = (reLogin.body as any).accessToken;

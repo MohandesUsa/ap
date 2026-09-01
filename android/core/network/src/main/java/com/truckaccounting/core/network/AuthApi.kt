@@ -29,6 +29,7 @@ interface AuthApi {
 data class LoginRequest(
     val phoneNumber: String,
     val password: String,
+    val deviceId: String,
 )
 
 data class RegisterRequest(
@@ -37,6 +38,7 @@ data class RegisterRequest(
     val fullName: String,
     val role: String,
     val companyName: String? = null,
+    val deviceId: String,
 )
 
 data class RefreshRequest(val refreshToken: String)
@@ -46,15 +48,24 @@ data class RefreshResponse(
     val refreshToken: String,
 )
 
+/**
+ * `status` is always present: `"authenticated"` (the normal case — every other field is then
+ * present too) or `"pending_approval"` (a login from a device other than this account's trusted
+ * one; only `requestId` is present, and no tokens are issued). The token/profile fields are
+ * therefore nullable — never force-unwrap them without checking `status` first (see
+ * AuthRepositoryImpl.persistAndMap's guard).
+ */
 data class AuthResponse(
-    val accessToken: String,
-    val refreshToken: String,
-    val userId: String,
-    val role: String, // authoritative role, returned by the server — Phase 1 §6 / Phase 3 §10
-    val fullName: String,
-    val phoneNumber: String,
-    val subscriptionStatus: String, // "trial" | "active" | "expired" — Phase 2 addendum §11.10
-    val trialDaysLeft: Int?,
+    val status: String,
+    val accessToken: String? = null,
+    val refreshToken: String? = null,
+    val userId: String? = null,
+    val role: String? = null, // authoritative role, returned by the server — Phase 1 §6 / Phase 3 §10
+    val fullName: String? = null,
+    val phoneNumber: String? = null,
+    val subscriptionStatus: String? = null, // "trial" | "active" | "expired" — Phase 2 addendum §11.10
+    val trialDaysLeft: Int? = null,
+    val requestId: String? = null,
 )
 
 data class CurrentUserResponse(

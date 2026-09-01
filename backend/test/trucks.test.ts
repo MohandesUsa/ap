@@ -4,7 +4,7 @@ import { startTestApp, apiCall, type TestApp } from './helpers/testApp.ts';
 
 async function registerOwner(app: TestApp, phone: string) {
   const res = await apiCall(app.baseUrl, 'POST', '/auth/register', {
-    body: { phoneNumber: phone, password: 'secret123', fullName: `Owner ${phone}`, role: 'owner' },
+    body: { phoneNumber: phone, password: 'secret123', fullName: `Owner ${phone}`, role: 'owner', deviceId: `device-${phone}` },
   });
   return res.body as { accessToken: string; userId: string };
 }
@@ -52,7 +52,7 @@ describe('Trucks', () => {
 
   test('a driver cannot create a truck (role-gated)', async () => {
     const driverRes = await apiCall(app.baseUrl, 'POST', '/auth/register', {
-      body: { phoneNumber: '09130000005', password: 'secret123', fullName: 'Driver', role: 'driver' },
+      body: { phoneNumber: '09130000005', password: 'secret123', fullName: 'Driver', role: 'driver', deviceId: 'device-09130000005' },
     });
     const { accessToken } = driverRes.body as any;
 

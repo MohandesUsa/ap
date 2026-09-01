@@ -53,12 +53,12 @@ describe('Admin directory: users/owners/drivers/trucks (Phases 5-8)', () => {
     const suspend = await apiCall(app.baseUrl, 'PUT', `/admin/users/${userId}/status`, { token: accessToken, body: { isActive: false } });
     assert.equal(suspend.status, 200);
 
-    const loginAttempt = await apiCall(app.baseUrl, 'POST', '/auth/login', { body: { phoneNumber: '09110000008', password: 'secret123' } });
+    const loginAttempt = await apiCall(app.baseUrl, 'POST', '/auth/login', { body: { phoneNumber: '09110000008', password: 'secret123', deviceId: 'device-09110000008' } });
     assert.equal(loginAttempt.status, 403);
 
     const reactivate = await apiCall(app.baseUrl, 'PUT', `/admin/users/${userId}/status`, { token: accessToken, body: { isActive: true } });
     assert.equal(reactivate.status, 200);
-    const loginAgain = await apiCall(app.baseUrl, 'POST', '/auth/login', { body: { phoneNumber: '09110000008', password: 'secret123' } });
+    const loginAgain = await apiCall(app.baseUrl, 'POST', '/auth/login', { body: { phoneNumber: '09110000008', password: 'secret123', deviceId: 'device-09110000008' } });
     assert.equal(loginAgain.status, 200);
   });
 

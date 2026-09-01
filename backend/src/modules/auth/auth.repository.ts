@@ -10,6 +10,17 @@ export interface UserRow {
   is_active: number;
   created_at: string;
   updated_at: string;
+  trusted_device_id: string | null;
+}
+
+export interface DeviceLoginRequestRow {
+  id: string;
+  user_id: string;
+  device_id: string;
+  device_label: string | null;
+  status: 'pending' | 'approved' | 'denied' | 'expired' | 'consumed';
+  created_at: string;
+  decided_at: string | null;
 }
 
 export interface OwnerRow {
@@ -63,16 +74,19 @@ export class AuthRepository {
     role: 'owner' | 'driver';
     fullName: string;
     companyName?: string | null;
+    deviceId: string;
   }): Promise<{ user: UserRow; profileId: string }> {
     return this.db.transaction(async (tx) => {
       const now = new Date().toISOString();
       const userId = randomUUID();
 
+      // The registering device is trusted immediately — it's the first device this account has
+      // ever had, so there is nothing else for it to be approved against.
       const { rows: userRows } = await tx.query<UserRow>(
-        `INSERT INTO users (id, phone_number, password_hash, role, phone_verified, is_active, created_at, updated_at)
-         VALUES ($1, $2, $3, $4, 0, 1, $5, $6)
+        `INSERT INTO users (id, phone_number, password_hash, role, phone_verified, is_active, trusted_device_id, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, 0, 1, $5, $6, $7)
          RETURNING *`,
-        [userId, params.phoneNumber, params.passwordHash, params.role, now, now],
+        [userId, params.phoneNumber, params.passwordHash, params.role, params.deviceId, now, now],
       );
       const user = userRows[0];
 
@@ -127,5 +141,42 @@ export class AuthRepository {
       'UPDATE refresh_tokens SET revoked_at = $1 WHERE user_id = $2 AND revoked_at IS NULL',
       [new Date().toISOString(), userId],
     );
+  }
+
+  async setTrustedDevice(userId: string, deviceId: string): Promise<void> {
+    await this.db.query('UPDATE users SET trusted_device_id = $1, updated_at = $2 WHERE id = $3', [
+      deviceId, new Date().toISOString(), userId,
+    ]);
+  }
+
+  async createDeviceLoginRequest(params: { userId: string; deviceId: string; deviceLabel: string | null }): Promise<DeviceLoginRequestRow> {
+    const id = randomUUID();
+    const { rows } = await this.db.query<DeviceLoginRequestRow>(
+      `INSERT INTO device_login_requests (id, user_id, device_id, device_label, status, created_at, decided_at)
+       VALUES ($1, $2, $3, $4, 'pending', $5, NULL) RETURNING *`,
+      [id, params.userId, params.deviceId, params.deviceLabel, new Date().toISOString()],
+    );
+    return rows[0];
+  }
+
+  async findDeviceLoginRequestById(id: string): Promise<DeviceLoginRequestRow | null> {
+    const { rows } = await this.db.query<DeviceLoginRequestRow>('SELECT * FROM device_login_requests WHERE id = $1', [id]);
+    return rows[0] ?? null;
+  }
+
+  async listPendingDeviceLoginRequests(userId: string): Promise<DeviceLoginRequestRow[]> {
+    const { rows } = await this.db.query<DeviceLoginRequestRow>(
+      `SELECT * FROM device_login_requests WHERE user_id = $1 AND status = 'pending' ORDER BY created_at DESC`,
+      [userId],
+    );
+    return rows;
+  }
+
+  async setDeviceLoginRequestStatus(id: string, status: DeviceLoginRequestRow['status']): Promise<DeviceLoginRequestRow> {
+    const { rows } = await this.db.query<DeviceLoginRequestRow>(
+      `UPDATE device_login_requests SET status = $1, decided_at = $2 WHERE id = $3 RETURNING *`,
+      [status, new Date().toISOString(), id],
+    );
+    return rows[0];
   }
 }

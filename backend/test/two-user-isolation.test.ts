@@ -7,7 +7,7 @@ async function fullySetUp(app: TestApp, suffix: string) {
   const driverPhone = `0916000002${suffix}`;
 
   const owner = await apiCall(app.baseUrl, 'POST', '/auth/register', {
-    body: { phoneNumber: ownerPhone, password: 'pass1234', fullName: `Owner ${suffix}`, role: 'owner' },
+    body: { phoneNumber: ownerPhone, password: 'pass1234', fullName: `Owner ${suffix}`, role: 'owner', deviceId: `device-${ownerPhone}` },
   });
   const ownerToken = (owner.body as any).accessToken;
 
@@ -21,7 +21,7 @@ async function fullySetUp(app: TestApp, suffix: string) {
   });
 
   const driver = await apiCall(app.baseUrl, 'POST', '/auth/register', {
-    body: { phoneNumber: driverPhone, password: 'pass1234', fullName: `Driver ${suffix}`, role: 'driver' },
+    body: { phoneNumber: driverPhone, password: 'pass1234', fullName: `Driver ${suffix}`, role: 'driver', deviceId: `device-${driverPhone}` },
   });
   const driverToken = (driver.body as any).accessToken;
 

@@ -4,14 +4,14 @@ import { startTestApp, apiCall, type TestApp } from './helpers/testApp.ts';
 
 async function registerOwner(app: TestApp, phone: string) {
   const res = await apiCall(app.baseUrl, 'POST', '/auth/register', {
-    body: { phoneNumber: phone, password: 'secret123', fullName: `Owner ${phone}`, role: 'owner' },
+    body: { phoneNumber: phone, password: 'secret123', fullName: `Owner ${phone}`, role: 'owner', deviceId: `device-${phone}` },
   });
   return res.body as { accessToken: string; userId: string };
 }
 
 async function registerDriver(app: TestApp, phone: string) {
   const res = await apiCall(app.baseUrl, 'POST', '/auth/register', {
-    body: { phoneNumber: phone, password: 'secret123', fullName: `Driver ${phone}`, role: 'driver' },
+    body: { phoneNumber: phone, password: 'secret123', fullName: `Driver ${phone}`, role: 'driver', deviceId: `device-${phone}` },
   });
   return res.body as { accessToken: string; userId: string };
 }
