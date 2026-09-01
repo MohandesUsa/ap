@@ -1,4 +1,4 @@
-package com.truckaccounting.admin.ui.dashboard
+package com.truckaccounting.admin.ui.revenue
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,54 +24,38 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.truckaccounting.admin.data.DashboardResponse
+import com.truckaccounting.admin.data.RevenueResponse
 import com.truckaccounting.admin.ui.nav.DrawerMenuIcon
 
 private data class StatItem(val label: String, val value: String)
 
-private fun statsFrom(d: DashboardResponse): List<StatItem> = listOf(
-    StatItem("کل کاربران", d.users.total.toString()),
-    StatItem("کاربران فعال", d.users.active.toString()),
-    StatItem("کاربر جدید امروز", d.users.newToday.toString()),
-    StatItem("صاحبان کامیون", d.fleet.totalOwners.toString()),
-    StatItem("رانندگان", d.fleet.totalDrivers.toString()),
-    StatItem("کامیون‌ها", d.fleet.totalTrucks.toString()),
-    StatItem("اشتراک فعال", d.subscriptions.active.toString()),
-    StatItem("اشتراک منقضی", d.subscriptions.expired.toString()),
-    StatItem("درآمد امروز", d.revenue.today.toString()),
-    StatItem("درآمد این ماه", d.revenue.thisMonth.toString()),
-    StatItem("پرداخت موفق", d.payments.successful.toString()),
-    StatItem("پرداخت ناموفق", d.payments.failed.toString()),
+private fun statsFrom(d: RevenueResponse): List<StatItem> = listOf(
+    StatItem("درآمد امروز", d.today.toString()),
+    StatItem("درآمد این ماه", d.thisMonth.toString()),
+    StatItem("درآمد امسال", d.thisYear.toString()),
+    StatItem("مجموع کل", d.allTime.toString()),
+    StatItem("پرداخت موفق", (d.paymentCounts["successful"] ?: 0).toString()),
+    StatItem("پرداخت ناموفق", (d.paymentCounts["failed"] ?: 0).toString()),
+    StatItem("پرداخت در انتظار", (d.paymentCounts["pending"] ?: 0).toString()),
 )
 
 @Composable
-fun DashboardScreen(
+fun RevenueScreen(
     openDrawer: () -> Unit,
-    viewModel: DashboardViewModel = hiltViewModel(),
+    viewModel: RevenueViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
-
     Scaffold(
-        topBar = {
-            TopAppBar(title = { Text("داشبورد مدیریت") }, navigationIcon = { DrawerMenuIcon(openDrawer) })
-        },
+        topBar = { TopAppBar(title = { Text("درآمد") }, navigationIcon = { DrawerMenuIcon(openDrawer) }) },
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
             when (val s = state) {
-                is DashboardUiState.Loading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                is DashboardUiState.Error -> Column(
-                    modifier = Modifier.fillMaxSize().padding(24.dp),
-                    verticalArrangement = Arrangement.Center,
-                ) {
+                is RevenueUiState.Loading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                is RevenueUiState.Error -> Column(modifier = Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.Center) {
                     Text(s.message, color = MaterialTheme.colorScheme.error)
-                    Button(onClick = { viewModel.refresh() }, modifier = Modifier.padding(top = 12.dp)) {
-                        Text("تلاش مجدد")
-                    }
+                    Button(onClick = { viewModel.load() }, modifier = Modifier.padding(top = 12.dp)) { Text("تلاش مجدد") }
                 }
-                is DashboardUiState.Success -> LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    contentPadding = PaddingValues(16.dp),
-                ) {
+                is RevenueUiState.Success -> LazyVerticalGrid(columns = GridCells.Fixed(2), contentPadding = PaddingValues(16.dp)) {
                     items(statsFrom(s.data)) { stat ->
                         Card(modifier = Modifier.padding(6.dp).fillMaxWidth()) {
                             Column(modifier = Modifier.padding(14.dp)) {

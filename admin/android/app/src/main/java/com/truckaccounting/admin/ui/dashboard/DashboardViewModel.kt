@@ -39,11 +39,4 @@ class DashboardViewModel @Inject constructor(
             }
         }
     }
-
-    fun logout(onDone: () -> Unit) {
-        viewModelScope.launch {
-            repository.logout()
-            onDone()
-        }
-    }
 }

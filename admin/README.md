@@ -32,7 +32,7 @@
 |---|---|
 | **Backend Admin API + RBAC** | ✅ کامل، ۸۴ تست واقعی (روی SQLite **و** روی MariaDB واقعی نصب‌شده در همین محیط) پاس شدند |
 | **admin-preview.html** (Phase 37) | ✅ کامل، تست‌شده با Playwright (۲۷ سناریوی واقعی، صفر خطا) |
-| **اپ اندروید Admin** | ⚠️ فقط یک Skeleton واقعی با دو صفحهٔ کامل (ورود + داشبورد) — نه هر ۱۳ بخش Phase 34. هرگز Build نشده (این محیط SDK اندروید ندارد) |
+| **اپ اندروید Admin** | ⚠️ هر ۱۳ صفحهٔ Phase 34 نوشته شده (ورود، داشبورد، و ۱۱ بخش دیگر با Drawer ناوبری فیلترشده بر اساس Permission) — هرگز Build/Run/تست نشده (این محیط SDK اندروید ندارد) |
 
 جزئیات کامل در پایین همین فایل، بخش «محدودیت‌های شناخته‌شده».
 
@@ -168,7 +168,7 @@ cd admin/android
 
 ## محدودیت‌های شناخته‌شده (صادقانه، طبق قانون ۱۱/۱۲)
 
-- **اپ اندروید Admin ناقص است**: فقط صفحهٔ ورود و داشبورد واقعی پیاده‌سازی و به کد نوشته شده‌اند (نه تست‌شده — این محیط SDK اندروید ندارد). ۱۱ بخش دیگر از ناوبری پیشنهادی Phase 34 (Users, Owners, Drivers, Trucks, Subscriptions, Orders, Payments, Revenue, Notifications, Settings, Audit Logs, Admins) هنوز صفحهٔ Compose ندارند — Endpoint Backendشان کامل و تست‌شده آماده است (`AdminApi.kt` را برای هرکدام گسترش دهید، دقیقاً به همان الگوی `dashboard()`/`users()`).
+- **اپ اندروید Admin هرگز Build/Run نشده**: هر ۱۳ صفحهٔ ناوبری Phase 34 (ورود، داشبورد، Users, Owners, Drivers, Trucks, Subscriptions+Plans, Orders, Payments, Revenue, Notifications, Settings, Audit Logs, Admins) اکنون به‌صورت ViewModel+Screen واقعی نوشته شده‌اند — `AdminApi.kt` تمام Endpointهای Backend را پوشش می‌دهد و نام دقیق فیلدهای JSON (snake_case برای ردیف‌های خام SQL، camelCase برای پاسخ‌های auth/dashboard/plan/revenue) از روی کد واقعی Backend تطبیق داده شده. یک Drawer ناوبری (`AdminDrawerShell`) بر اساس Permissionهای واقعی `/admin/auth/me` صفحات را فیلتر می‌کند. با این‌همه، **هیچ‌کدام کامپایل یا روی دستگاه/شبیه‌ساز اجرا نشده‌اند** — این محیط SDK اندروید ندارد، پس احتمال خطای کامپایل (Import اشتباه، Type Mismatch، وابستگی جاافتاده) در این کد رد نمی‌شود؛ فقط با مرور دستی سازگاری آن با Backend بررسی شده.
 - **هیچ Build واقعی (Debug/Release APK) انجام نشد** — نه برای Admin App، نه بررسی مجدد User App. این محیط Android SDK ندارد (همان محدودیت Phase 2 اپ کاربران).
 - **اتصال واقعی به ملی‌پیامک/زرین‌پال تأیید نشد** — کد کلاینت (`MeliPayamakProvider`, `ZarinpalProvider`) طبق مستندات عمومی این دو سرویس نوشته شده، اما بدون Credential واقعی قابل تست نبود. Test-connection صادقانه «تنظیم‌نشده» برمی‌گرداند وقتی چیزی ذخیره نشده — هرگز موفقیت ساختگی (طبق قانون ۱۲).
 - **بدون Refresh Token برای Admin** — نشست Admin فقط با Access Token ۸ساعته کار می‌کند؛ منقضی که شد، باید دوباره وارد شود. تصمیمی آگاهانه برای کاهش دامنهٔ کار این نشست، نه محدودیت فنی.
