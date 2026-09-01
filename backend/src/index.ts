@@ -1,10 +1,10 @@
 import { loadConfig } from './config/env.ts';
-import { PgClient } from './db/PgClient.ts';
+import { MySqlClient } from './db/MySqlClient.ts';
 import { buildApp } from './app.ts';
 
 async function main() {
   const config = loadConfig();
-  const db = new PgClient(config.databaseUrl);
+  const db = new MySqlClient(config.databaseUrl);
 
   const server = await buildApp(db, config);
 

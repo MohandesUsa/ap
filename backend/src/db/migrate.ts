@@ -12,9 +12,12 @@ const MIGRATIONS_DIR = join(__dirname, '..', '..', 'migrations');
  * controlled, and safe to run against a fresh database).
  */
 export async function runMigrations(db: DbClient): Promise<string[]> {
+  // version is a migration filename (e.g. "001_init.sql") — 255 chars is generous headroom, and
+  // (unlike the plain TEXT this used to be) MySQL requires a declared length to put a PRIMARY KEY
+  // on it at all; SQLite ignores the length and stores it identically either way.
   await db.query(`
     CREATE TABLE IF NOT EXISTS schema_migrations (
-      version TEXT PRIMARY KEY,
+      version VARCHAR(255) PRIMARY KEY,
       applied_at TEXT NOT NULL
     )
   `);

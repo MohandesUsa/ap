@@ -1,10 +1,10 @@
 import { loadConfig } from '../src/config/env.ts';
-import { PgClient } from '../src/db/PgClient.ts';
+import { MySqlClient } from '../src/db/MySqlClient.ts';
 import { runMigrations } from '../src/db/migrate.ts';
 
 async function main() {
   const config = loadConfig();
-  const db = new PgClient(config.databaseUrl);
+  const db = new MySqlClient(config.databaseUrl);
   try {
     const applied = await runMigrations(db);
     if (applied.length === 0) {

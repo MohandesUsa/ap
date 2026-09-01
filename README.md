@@ -5,7 +5,7 @@
 ```
 TruckAccounting/
 ├── android/     ← پروژه واقعی Android (Phase 2 + اتصال واقعی به Backend در Phase 3)
-├── backend/     ← Backend واقعی روی PostgreSQL (Phase 3) — README مخصوص خودش را ببینید
+├── backend/     ← Backend واقعی روی MySQL/MariaDB (Phase 3، دیتابیس در Phase 3.1 عوض شد) — README مخصوص خودش را ببینید
 ├── web/         ← نسخهٔ وب پیش‌نمایش (برای دیدن سریع UI روی سرور، جدا از اپ اندروید)
 └── docs/
     ├── ARCHITECTURE.md      ← سند معماری تأییدشدهٔ Phase 1
@@ -18,9 +18,11 @@ TruckAccounting/
 
 **Phase 2 (اپلیکیشن Android):** در محیطی بدون Android SDK نوشته شد — کد کامل است اما هرگز با `./gradlew assembleDebug` واقعاً Build نشد؛ بررسی‌های ایستا (تعادل آکولاد، Importهای تکراری، تطابق Package با مسیر پوشه، تطابق هر `R.string.x` با تعریف واقعی‌اش) روی تمام فایل‌ها انجام شد و بدون خطا بود، اما تأیید نهایی با Android Studio روی دستگاه خودتان است.
 
-**Phase 3 (Backend):** برخلاف Phase 2، این بخش واقعاً **اجرا و تست شد** — این محیط Node.js 22 داشت که می‌تواند فایل‌های TypeScript را مستقیم اجرا کند، و به کمک ماژول داخلی `node:sqlite`، همان کد و همان Migration SQL که برای PostgreSQL واقعی نوشته شده، اینجا هم واقعاً اجرا شد. نتیجه: **۳۳ تست واقعی نوشته و اجرا شدند و هرکدام پاس شدند** — شامل کل سناریوی Owner→Truck→Invite→Driver→Accept→Dashboard→Logout→Login مجدد، و تست‌های امنیتی صریح («Owner A نمی‌تواند کامیون Owner B را ببیند»، «راننده B نمی‌تواند دعوت راننده A را بدزدد»، و غیره). جزئیات کامل در `backend/README.md`.
+**Phase 3 (Backend):** برخلاف Phase 2، این بخش واقعاً **اجرا و تست شد** — این محیط Node.js 22 داشت که می‌تواند فایل‌های TypeScript را مستقیم اجرا کند، و به کمک ماژول داخلی `node:sqlite`، همان کد و همان Migration SQL که برای دیتابیس تولید نوشته شده، اینجا هم واقعاً اجرا شد. نتیجه: **۴۹ تست واقعی نوشته و اجرا شدند و هرکدام پاس شدند** — شامل کل سناریوی Owner→Truck→Invite→Driver→Accept→Dashboard→Logout→Login مجدد، تست‌های امنیتی صریح («Owner A نمی‌تواند کامیون Owner B را ببیند»، «راننده B نمی‌تواند دعوت راننده A را بدزدد»، و غیره)، و کل موتور حسابداری (Phase 4). جزئیات کامل در `backend/README.md`.
 
-آنچه در این محیط واقعاً اجرا **نشد**: خودِ PostgreSQL و Docker (چون در sandbox وجود نداشتند) و کل زنجیرهٔ Android (چون SDK وجود نداشت). این دو مرحله (بالا آوردن `docker compose` برای Backend، و Build گرفتن از Android در Android Studio) قدم بعدی شماست.
+**Phase 3.1 (تغییر دیتابیس به MySQL/MariaDB):** دیتابیس تولید از PostgreSQL به MySQL/MariaDB تغییر کرد (دلیل: هاست هدف فقط MySQL/MariaDB می‌دهد). برخلاف Phase 3، این‌بار حتی خودِ دیتابیس واقعی هم در دسترس بود: **MariaDB 10.11 در همین محیط نصب و اجرا شد** و همان ۴۹ تست، این‌بار روی یک دیتابیس MariaDB واقعی (نه فقط SQLite)، دوباره اجرا شدند و پاس شدند — به‌همراه یک تست Concurrency واقعی (۲۰ درخواست هم‌زمان برای پذیرش یک دعوت‌نامه، که دقیقاً یکی موفق شد). جزئیات کامل، از جمله این‌که چرا `RETURNING` (که MySQL ندارد) نیاز به شبیه‌سازی داشت و چطور Race-condition حفظ شد، در `backend/README.md` و `docs/ARCHITECTURE.md` (بخش Addendum).
+
+آنچه در این محیط واقعاً اجرا **نشد**: یک هاست اشتراکی واقعی (DirectAdmin/cPanel) برای تأیید نهایی روی زیرساخت هدف، Docker (برای Backend)، و کل زنجیرهٔ Android (چون SDK وجود نداشت). این مراحل قدم بعدی شماست.
 
 ---
 

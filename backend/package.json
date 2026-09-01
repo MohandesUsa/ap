@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "TruckAccounting backend — REST API over PostgreSQL. See README.md.",
+  "description": "TruckAccounting backend — REST API over MySQL/MariaDB. See README.md.",
   "engines": {
     "node": ">=22.6.0"
   },
@@ -14,9 +14,6 @@
     "migrate": "node scripts/migrate.ts"
   },
   "dependencies": {
-    "pg": "^8.13.1"
-  },
-  "devDependencies": {
-    "@types/pg": "^8.11.10"
+    "mysql2": "^3.24.2"
   }
 }

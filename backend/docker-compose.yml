@@ -1,17 +1,19 @@
 services:
-  postgres:
-    image: postgres:16-alpine
+  mysql:
+    image: mysql:8.0
     restart: unless-stopped
     environment:
-      POSTGRES_USER: truckaccounting
-      POSTGRES_PASSWORD: changeme
-      POSTGRES_DB: truckaccounting
+      MYSQL_USER: truckaccounting
+      MYSQL_PASSWORD: changeme
+      MYSQL_DATABASE: truckaccounting
+      MYSQL_ALLOW_EMPTY_PASSWORD: "no"
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
     ports:
-      - "5432:5432"
+      - "3306:3306"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U truckaccounting"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "truckaccounting", "-pchangeme"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -20,11 +22,11 @@ services:
     build: .
     restart: unless-stopped
     depends_on:
-      postgres:
+      mysql:
         condition: service_healthy
     environment:
       PORT: 3000
-      DATABASE_URL: postgres://truckaccounting:changeme@postgres:5432/truckaccounting
+      DATABASE_URL: mysql://truckaccounting:changeme@mysql:3306/truckaccounting
       # NOTE: these are development-only defaults so `docker compose up` works out of the box.
       # Never use these values in production — see .env.example and README.md.
       JWT_SECRET: dev-only-jwt-secret-change-me
@@ -34,4 +36,4 @@ services:
     command: sh -c "npm run migrate && node src/index.ts"
 
 volumes:
-  postgres_data:
+  mysql_data:

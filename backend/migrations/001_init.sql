@@ -2,21 +2,32 @@
 -- Initial schema, matching docs/ARCHITECTURE.md §3 (Phase 1, approved) plus the refresh_tokens
 -- table needed for real rotation/revocation (Phase 3 §12).
 --
--- Portability note: this file is written to run unmodified against BOTH PostgreSQL (production,
--- see src/db/PgClient.ts) and SQLite (used only for this project's own automated tests, see
--- src/db/SqliteClient.ts) so there is exactly one schema definition, not two that could drift
--- apart. Concretely this means:
---   - IDs are TEXT (UUIDs generated in application code via crypto.randomUUID(), never
---     DB-generated) instead of Postgres-only gen_random_uuid()/SERIAL.
---   - Enums are TEXT + CHECK(...) instead of native Postgres ENUM types.
---   - Timestamps are TEXT (ISO-8601, written by application code) instead of native TIMESTAMPTZ,
---     which keeps sorting/comparison correct in both engines without relying on
---     engine-specific "now()" defaults.
+-- Portability note (Phase 3.1): this file is written to run unmodified against BOTH MySQL/MariaDB
+-- (production, see src/db/MySqlClient.ts) and SQLite (used only for this project's own automated
+-- tests, see src/db/SqliteClient.ts) so there is exactly one schema definition, not two that could
+-- drift apart. Concretely this means:
+--   - IDs and foreign keys are VARCHAR(36) (a UUID's exact rendered length), generated in
+--     application code via crypto.randomUUID(), never DB-generated — MySQL cannot put a UNIQUE
+--     index, PRIMARY KEY, or FOREIGN KEY on a TEXT/BLOB column without an explicit prefix length,
+--     so every id-shaped column needs a real declared length. SQLite ignores VARCHAR(N)'s length
+--     entirely (TEXT affinity) but stores and compares the values identically either way.
+--   - Other UNIQUE-constrained free text (phone numbers, plates, tokens) is VARCHAR with a length
+--     generous enough for its real values (see the comment on each), for the same reason.
+--   - Enums are VARCHAR + CHECK(...) instead of a native ENUM type — requires MySQL 8.0.16+ or
+--     MariaDB 10.2.1+ for CHECK to actually be enforced (older versions parse but silently ignore
+--     it, both long past end-of-life for anything this project targets), and SQLite has
+--     supported CHECK for as long as this project has existed.
+--   - Timestamps are TEXT (ISO-8601, written by application code) instead of a native TIMESTAMP
+--     type, which keeps sorting/comparison correct on both engines without relying on
+--     engine-specific "now()"/CURRENT_TIMESTAMP defaults or timezone-conversion quirks.
 --   - No JSONB — audit_logs old/new values are stored as TEXT containing a JSON string.
+--   - No explicit ENGINE=InnoDB on any table: SQLite has no such clause at all (its parser would
+--     reject the syntax), and both MySQL 8+ and MariaDB 10+ already default to InnoDB, which is
+--     what foreign keys here require anyway — leaving it implicit keeps one file valid on both.
 
 CREATE TABLE users (
-    id TEXT PRIMARY KEY,
-    phone_number TEXT NOT NULL UNIQUE,
+    id VARCHAR(36) PRIMARY KEY,
+    phone_number VARCHAR(20) NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
     role TEXT NOT NULL CHECK (role IN ('owner', 'driver')),
     phone_verified INTEGER NOT NULL DEFAULT 0,
@@ -26,16 +37,16 @@ CREATE TABLE users (
 );
 
 CREATE TABLE owners (
-    id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+    id VARCHAR(36) PRIMARY KEY,
+    user_id VARCHAR(36) NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
     full_name TEXT NOT NULL,
     company_name TEXT,
     created_at TEXT NOT NULL
 );
 
 CREATE TABLE drivers (
-    id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+    id VARCHAR(36) PRIMARY KEY,
+    user_id VARCHAR(36) NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
     full_name TEXT NOT NULL,
     license_number TEXT,
     -- Phase 2 addendum §11.8: pay is EITHER percent OR salary — one type + one value column,
@@ -46,9 +57,11 @@ CREATE TABLE drivers (
 );
 
 CREATE TABLE trucks (
-    id TEXT PRIMARY KEY,
-    owner_id TEXT NOT NULL REFERENCES owners(id) ON DELETE CASCADE,
-    plate TEXT NOT NULL UNIQUE,
+    id VARCHAR(36) PRIMARY KEY,
+    owner_id VARCHAR(36) NOT NULL REFERENCES owners(id) ON DELETE CASCADE,
+    -- 64 chars comfortably covers an Iranian plate string ("22 الف 262 ایران 22") with room to
+    -- spare — VARCHAR length is counted in characters, not bytes, so the Persian text is fine.
+    plate VARCHAR(64) NOT NULL UNIQUE,
     brand TEXT NOT NULL,
     model_year TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'inactive')),
@@ -58,9 +71,9 @@ CREATE TABLE trucks (
 CREATE INDEX idx_trucks_owner_id ON trucks(owner_id);
 
 CREATE TABLE driver_trucks (
-    id TEXT PRIMARY KEY,
-    driver_id TEXT NOT NULL REFERENCES drivers(id) ON DELETE CASCADE,
-    truck_id TEXT NOT NULL REFERENCES trucks(id) ON DELETE CASCADE,
+    id VARCHAR(36) PRIMARY KEY,
+    driver_id VARCHAR(36) NOT NULL REFERENCES drivers(id) ON DELETE CASCADE,
+    truck_id VARCHAR(36) NOT NULL REFERENCES trucks(id) ON DELETE CASCADE,
     start_date TEXT NOT NULL,
     end_date TEXT,
     status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'inactive'))
@@ -69,13 +82,15 @@ CREATE INDEX idx_driver_trucks_driver_id ON driver_trucks(driver_id);
 CREATE INDEX idx_driver_trucks_truck_id ON driver_trucks(truck_id);
 
 CREATE TABLE invitations (
-    id TEXT PRIMARY KEY,
-    token TEXT NOT NULL UNIQUE,
-    owner_id TEXT NOT NULL REFERENCES owners(id) ON DELETE CASCADE,
-    driver_phone TEXT NOT NULL,
-    truck_id TEXT REFERENCES trucks(id) ON DELETE SET NULL,
+    id VARCHAR(36) PRIMARY KEY,
+    -- inviteCode (10 chars) + ":" + a base64url-encoded 32-byte token (~43 chars) — 128 leaves
+    -- comfortable headroom (see security/tokens.ts).
+    token VARCHAR(128) NOT NULL UNIQUE,
+    owner_id VARCHAR(36) NOT NULL REFERENCES owners(id) ON DELETE CASCADE,
+    driver_phone VARCHAR(20) NOT NULL,
+    truck_id VARCHAR(36) REFERENCES trucks(id) ON DELETE SET NULL,
     status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'expired', 'cancelled')),
-    accepted_by_user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+    accepted_by_user_id VARCHAR(36) REFERENCES users(id) ON DELETE SET NULL,
     expires_at TEXT NOT NULL,
     created_at TEXT NOT NULL
 );
@@ -84,26 +99,25 @@ CREATE INDEX idx_invitations_driver_phone ON invitations(driver_phone);
 
 -- Phase 3 §12: refresh tokens must be revocable and rotatable, which requires a DB record per
 -- token rather than trusting a stateless JWT alone. Only the HASH is stored (never the raw
--- token), the same principle as password storage — see src/security/tokens.ts.
+-- token), the same principle as password storage — see src/security/tokens.ts (sha256 hex = 64
+-- chars, exactly).
 CREATE TABLE refresh_tokens (
-    id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    token_hash TEXT NOT NULL UNIQUE,
+    id VARCHAR(36) PRIMARY KEY,
+    user_id VARCHAR(36) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token_hash VARCHAR(64) NOT NULL UNIQUE,
     expires_at TEXT NOT NULL,
     revoked_at TEXT,
-    replaced_by_token_id TEXT,
+    replaced_by_token_id VARCHAR(36),
     created_at TEXT NOT NULL
 );
 CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id);
 
--- Accounting tables — schema ready per Phase 1 §3 and Phase 2 addendum §11.2, but Phase 3 does
--- NOT ship CRUD endpoints for these (project rule: financial logic stays a placeholder/zero
--- until a later phase). Creating them now means the eventual accounting-engine phase is purely
--- additive (new endpoints + business logic), never a schema migration that risks existing data.
+-- Accounting tables (Phase 4): trips, expenses, settlements, and payments — see
+-- src/modules/trips, src/modules/expenses, src/modules/settlement.
 CREATE TABLE trips (
-    id TEXT PRIMARY KEY,
-    truck_id TEXT NOT NULL REFERENCES trucks(id) ON DELETE CASCADE,
-    driver_id TEXT NOT NULL REFERENCES drivers(id) ON DELETE CASCADE,
+    id VARCHAR(36) PRIMARY KEY,
+    truck_id VARCHAR(36) NOT NULL REFERENCES trucks(id) ON DELETE CASCADE,
+    driver_id VARCHAR(36) NOT NULL REFERENCES drivers(id) ON DELETE CASCADE,
     origin TEXT NOT NULL,
     destination TEXT NOT NULL,
     cargo_type TEXT,
@@ -120,10 +134,10 @@ CREATE INDEX idx_trips_truck_id ON trips(truck_id);
 CREATE INDEX idx_trips_driver_id ON trips(driver_id);
 
 CREATE TABLE expenses (
-    id TEXT PRIMARY KEY,
-    truck_id TEXT NOT NULL REFERENCES trucks(id) ON DELETE CASCADE,
-    driver_id TEXT NOT NULL REFERENCES drivers(id) ON DELETE CASCADE,
-    owner_id TEXT NOT NULL REFERENCES owners(id) ON DELETE CASCADE,
+    id VARCHAR(36) PRIMARY KEY,
+    truck_id VARCHAR(36) NOT NULL REFERENCES trucks(id) ON DELETE CASCADE,
+    driver_id VARCHAR(36) NOT NULL REFERENCES drivers(id) ON DELETE CASCADE,
+    owner_id VARCHAR(36) NOT NULL REFERENCES owners(id) ON DELETE CASCADE,
     category TEXT NOT NULL,
     amount INTEGER NOT NULL,
     expense_date TEXT NOT NULL,
@@ -133,10 +147,10 @@ CREATE TABLE expenses (
 );
 
 CREATE TABLE settlements (
-    id TEXT PRIMARY KEY,
-    owner_id TEXT NOT NULL REFERENCES owners(id) ON DELETE CASCADE,
-    driver_id TEXT NOT NULL REFERENCES drivers(id) ON DELETE CASCADE,
-    truck_id TEXT NOT NULL REFERENCES trucks(id) ON DELETE CASCADE,
+    id VARCHAR(36) PRIMARY KEY,
+    owner_id VARCHAR(36) NOT NULL REFERENCES owners(id) ON DELETE CASCADE,
+    driver_id VARCHAR(36) NOT NULL REFERENCES drivers(id) ON DELETE CASCADE,
+    truck_id VARCHAR(36) NOT NULL REFERENCES trucks(id) ON DELETE CASCADE,
     period_start TEXT NOT NULL,
     period_end TEXT NOT NULL,
     total_income INTEGER NOT NULL DEFAULT 0,
@@ -147,8 +161,8 @@ CREATE TABLE settlements (
 );
 
 CREATE TABLE payments (
-    id TEXT PRIMARY KEY,
-    settlement_id TEXT NOT NULL REFERENCES settlements(id) ON DELETE CASCADE,
+    id VARCHAR(36) PRIMARY KEY,
+    settlement_id VARCHAR(36) NOT NULL REFERENCES settlements(id) ON DELETE CASCADE,
     amount INTEGER NOT NULL,
     payment_date TEXT NOT NULL,
     method TEXT,
@@ -157,8 +171,8 @@ CREATE TABLE payments (
 
 -- Phase 3 §33: audit log for security-sensitive actions.
 CREATE TABLE audit_logs (
-    id TEXT PRIMARY KEY,
-    user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+    id VARCHAR(36) PRIMARY KEY,
+    user_id VARCHAR(36) REFERENCES users(id) ON DELETE SET NULL,
     action TEXT NOT NULL,
     entity_type TEXT,
     entity_id TEXT,

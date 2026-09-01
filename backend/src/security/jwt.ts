@@ -19,8 +19,8 @@ function sign(data: string, secret: string): string {
 /**
  * Signs a standard three-part HS256 JWT: base64url(header).base64url(payload).signature.
  * This is a from-scratch implementation of the same algorithm the `jsonwebtoken` npm package
- * uses for HS256 — chosen so the backend has zero non-`pg` runtime dependencies (see PgClient.ts
- * doc comment). `expiresInSeconds` is required explicitly at every call site rather than
+ * uses for HS256 — chosen so the backend has zero non-`mysql2` runtime dependencies (see
+ * MySqlClient.ts doc comment). `expiresInSeconds` is required explicitly at every call site rather than
  * defaulted, so a caller can never forget to set an expiry.
  */
 export function signJwt(
