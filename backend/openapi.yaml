@@ -24,7 +24,15 @@ components:
         details: { type: object }
     AuthResponse:
       type: object
+      description: >
+        `status` is always present. When it's "authenticated", every other field below is also
+        present. When it's "pending_approval" (this phone's trusted device is a different one —
+        see the single-trusted-device rule on /auth/login), only `requestId` is present and no
+        tokens are issued; poll GET /auth/device-requests/{id} until it resolves.
+      required: [status]
       properties:
+        status: { type: string, enum: [authenticated, pending_approval] }
+        requestId: { type: string, format: uuid, description: "Present only when status=pending_approval." }
         accessToken: { type: string }
         refreshToken: { type: string }
         userId: { type: string, format: uuid }
@@ -51,19 +59,21 @@ paths:
   /auth/register:
     post:
       summary: Register a new Owner or Driver account
+      description: The registering device becomes this account's trusted device immediately.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [phoneNumber, password, fullName, role]
+              required: [phoneNumber, password, fullName, role, deviceId]
               properties:
                 phoneNumber: { type: string, example: "09121234567" }
                 password: { type: string, minLength: 6 }
                 fullName: { type: string }
                 role: { type: string, enum: [owner, driver] }
                 companyName: { type: string }
+                deviceId: { type: string, description: "A stable id the client generates once and reuses across sessions on the same device." }
       responses:
         "201":
           description: Account created
@@ -76,21 +86,69 @@ paths:
   /auth/login:
     post:
       summary: Log in with phone number + password
+      description: >
+        Single-trusted-device rule: if `deviceId` doesn't match this account's currently trusted
+        device, no tokens are issued (see the 202 response) — the currently trusted device must
+        approve via POST /auth/device-requests/{id}/approve first.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [phoneNumber, password]
+              required: [phoneNumber, password, deviceId]
               properties:
                 phoneNumber: { type: string }
                 password: { type: string }
+                deviceId: { type: string }
+                deviceLabel: { type: string, description: "Optional human-readable label (e.g. browser/OS) shown to the trusted device when it reviews the request." }
       responses:
         "200":
-          description: Logged in
+          description: Logged in (status=authenticated)
+          content: { application/json: { schema: { $ref: "#/components/schemas/AuthResponse" } } }
+        "202":
+          description: Pending approval from this account's trusted device (status=pending_approval)
           content: { application/json: { schema: { $ref: "#/components/schemas/AuthResponse" } } }
         "400": { description: Invalid credentials (deliberately identical for wrong-password and unknown-phone) }
+
+  /auth/device-requests/{id}:
+    get:
+      summary: Poll a pending login-approval request (no auth — the id itself is the gate)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: "{status: pending|denied|expired} or, once approved, {status: authenticated, ...AuthResponse} — tokens are minted on this poll and the request is then one-time-consumed."
+        "404": { description: No such request }
+
+  /auth/device-requests:
+    get:
+      summary: List this account's own pending device-approval requests (requires the trusted device's access token)
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200": { description: "{requests: [{id, deviceLabel, createdAt}]}" }
+
+  /auth/device-requests/{id}/approve:
+    post:
+      summary: Approve a pending request — trust transfers to that device
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200": { description: Approved }
+        "404": { description: No such request, or it doesn't belong to the authenticated account }
+        "409": { description: Request is no longer pending }
+
+  /auth/device-requests/{id}/deny:
+    post:
+      summary: Deny a pending request
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200": { description: Denied }
+        "404": { description: No such request, or it doesn't belong to the authenticated account }
+        "409": { description: Request is no longer pending }
 
   /auth/refresh:
     post:

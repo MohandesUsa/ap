@@ -29,7 +29,7 @@ TruckAccounting/
 
 **`admin/admin-preview.html` اکنون واقعاً به همین Backend وصل است** (دیگر Mock/UI-Only نیست) — با Playwright روی یک نمونهٔ واقعی از Backend + MariaDB تست شد (۲۲ سناریوی واقعی: ورود با رمز غلط/درست، دیدن کاربران/صاحبان/کامیون‌های واقعی، ساخت پلن، ارسال اعلان، تست اتصال SMS/Payment که صادقانه «تنظیم‌نشده» برمی‌گرداند، و غیره). `web/` (پیش‌نمایش اپ کاربران) هنوز مثل قبل، مستقل و بر پایهٔ localStorage مرورگر است — به `backend/` وصل نیست.
 
-آنچه در این محیط واقعاً اجرا **نشد**: یک هاست اشتراکی واقعی (DirectAdmin/cPanel) برای تأیید نهایی روی زیرساخت هدف، Docker (برای Backend)، و کل زنجیرهٔ Android (چون SDK وجود نداشت). این مراحل قدم بعدی شماست.
+آنچه در این محیط واقعاً اجرا **نشد**: یک هاست اشتراکی واقعی (DirectAdmin/cPanel) برای تأیید نهایی روی زیرساخت هدف، Docker (برای Backend)، و کل زنجیرهٔ Android (چون SDK وجود نداشت). این مراحل قدم بعدی شماست — راهنمای گام‌به‌گام نصب روی هاست خودتان (هم مسیر DirectAdmin/cPanel، هم مسیر VPS+Docker) در **[`DEPLOY.md`](./DEPLOY.md)** آماده است.
 
 ---
 
@@ -126,7 +126,7 @@ android/
 
 یک اپلیکیشن Android **دوم و مستقل** (`admin/`) برای Super Admin/Admin/Support/Accountant، متصل به همان Backend و همان دیتابیس مرکزی — نه یک اپ یا دیتابیس جدا. جزئیات کامل (معماری، RBAC، Endpointها، محدودیت‌های شناخته‌شده) در `admin/README.md`؛ خلاصه:
 
-- **Backend + RBAC**: کامل و واقعاً تست‌شده — ۸۴ تست (۳۵ تای جدید) روی SQLite **و** روی MariaDB واقعی، شامل هر سناریوی منفی امنیتی مشخص‌شده (توکن کاربر روی API ادمین، SUPPORT روی تنظیمات پرداخت، ACCOUNTANT روی Secret پیامک، و غیره) — همه رد شدند، دقیقاً همان‌طور که باید.
+- **Backend + RBAC**: کامل و واقعاً تست‌شده — ۹۰ تست (۴۹ اصلی + ۳۵ Admin + ۶ تأیید ورود از گوشی جدید) روی SQLite **و** روی MariaDB واقعی، شامل هر سناریوی منفی امنیتی مشخص‌شده (توکن کاربر روی API ادمین، SUPPORT روی تنظیمات پرداخت، ACCOUNTANT روی Secret پیامک، و غیره) — همه رد شدند، دقیقاً همان‌طور که باید.
 - **`admin/admin-preview.html`**: پیش‌نمایش کامل UI (Dashboard، کاربران، اشتراک‌ها، تنظیمات SMS/Payment، Audit Log، مدیریت ادمین‌ها)، تست‌شده با ۲۷ سناریوی Playwright، بدون هیچ Secret واقعی.
 - **اپ اندروید Admin**: هر ۱۳ صفحهٔ Phase 34 نوشته شده (ورود، داشبورد، Users, Owners, Drivers, Trucks, Subscriptions, Orders, Payments, Revenue, Notifications, Settings, Audit Logs, Admins) با Drawer ناوبری فیلترشده بر اساس Permission — یک پروژهٔ Gradle کاملاً جدا از `android/` تا هیچ ریسکی برای اپ کاربران نداشته باشد. هرگز Build/Run نشده (بدون Android SDK در این محیط) — جزئیات در `admin/README.md`.
 

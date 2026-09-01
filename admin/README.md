@@ -30,7 +30,7 @@
 
 | بخش | وضعیت |
 |---|---|
-| **Backend Admin API + RBAC** | ✅ کامل، ۸۴ تست واقعی (روی SQLite **و** روی MariaDB واقعی نصب‌شده در همین محیط) پاس شدند |
+| **Backend Admin API + RBAC** | ✅ کامل، ۹۰ تست واقعی (روی SQLite **و** روی MariaDB واقعی نصب‌شده در همین محیط) پاس شدند |
 | **admin-preview.html** (Phase 37) | ✅ کامل، تست‌شده با Playwright (۲۷ سناریوی واقعی، صفر خطا) |
 | **اپ اندروید Admin** | ⚠️ هر ۱۳ صفحهٔ Phase 34 نوشته شده (ورود، داشبورد، و ۱۱ بخش دیگر با Drawer ناوبری فیلترشده بر اساس Permission) — هرگز Build/Run/تست نشده (این محیط SDK اندروید ندارد) |
 
@@ -150,13 +150,19 @@ npm start
 ### تست‌ها
 
 ```bash
-npm test                 # همهٔ ۸۴ تست (User App + Admin App) روی SQLite
+npm test                 # همهٔ ۹۰ تست (User App + Admin App + تأیید ورود از گوشی جدید) روی SQLite
 TEST_DB=mysql DATABASE_URL="mysql://..." node --test --test-concurrency=1 test/*.test.ts   # روی MySQL/MariaDB واقعی
 ```
 
-### پیش‌نمایش UI (بدون نیاز به Backend)
+### `admin-preview.html` — رابط وب واقعی (نه دیگر Mock)
 
-`admin/admin-preview.html` را مستقیماً در مرورگر باز کنید — کاملاً مستقل، داده‌های Mock، هیچ Secret واقعی ندارد (طبق محدودیت صریح Phase 37). با نقش‌های مختلف (بالای صفحهٔ ورود) وارد شوید تا تفاوت دسترسی هر نقش را ببینید.
+از نسخهٔ فعلی به بعد، `admin/admin-preview.html` واقعاً به همین Backend وصل می‌شود (فایل‌های Mock/Phase 37 حذف شدند). کافی است در مرورگر باز شود:
+
+```
+file:///.../admin/admin-preview.html?api=http://localhost:3000
+```
+
+یا آن را روی هر هاست/Static File Server دیگری قرار دهید (CORS از قبل باز است). اگر `?api=...` را ندهید، پیش‌فرض `http://localhost:3000` است و در همان مرورگر برای دفعات بعد به خاطر سپرده می‌شود (`localStorage`). برای بالا آوردن روی هاست شخصی، `../DEPLOY.md` (ریشهٔ مخزن) را ببینید.
 
 ### اپ اندروید
 

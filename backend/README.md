@@ -82,15 +82,15 @@ TEST_DB=mysql DATABASE_URL="mysql://user:pass@host:3306/db_name" node --test --t
 برای تست دستی پس از بالا آمدن سرور:
 
 ```bash
-# ثبت‌نام صاحب کامیون
+# ثبت‌نام صاحب کامیون — deviceId الزامی است (قانون «یک گوشی معتمد»، پایین همین فایل را ببینید)
 curl -X POST http://localhost:3000/auth/register \
   -H "Content-Type: application/json" \
-  -d '{"phoneNumber":"09120000001","password":"test1234","fullName":"صاحب کامیون تست","role":"owner"}'
+  -d '{"phoneNumber":"09120000001","password":"test1234","fullName":"صاحب کامیون تست","role":"owner","deviceId":"test-device-1"}'
 
 # ثبت‌نام راننده
 curl -X POST http://localhost:3000/auth/register \
   -H "Content-Type: application/json" \
-  -d '{"phoneNumber":"09120000002","password":"test1234","fullName":"راننده تست","role":"driver"}'
+  -d '{"phoneNumber":"09120000002","password":"test1234","fullName":"راننده تست","role":"driver","deviceId":"test-device-2"}'
 ```
 
 پاسخ شامل `accessToken` است؛ آن را در هدر `Authorization: Bearer <token>` برای درخواست‌های بعدی استفاده کنید.
