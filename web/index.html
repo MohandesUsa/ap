@@ -465,7 +465,7 @@
         <button class="icon-btn accent" onclick="goTo('owner-profile')">${ICON.user}</button>
       </div>
       <div class="screen-body">
-        <div class="greeting"><p class="hello">سلام، صاحب کامیون 👋</p><h2>خلاصه وضعیت این ماه</h2></div>
+        <div class="greeting"><p class="hello">سلام، <span id="odash-hello-name">صاحب کامیون</span> 👋</p><h2>خلاصه وضعیت این ماه</h2></div>
 
         <div class="stat-grid">
           <div class="stat-card"><div class="lbl">کامیون‌های من</div><div class="num" id="dash-truck-count">2</div></div>
@@ -571,7 +571,7 @@
     <section class="screen" data-screen="owner-invite">
       <div class="appbar on-owner"><button class="icon-btn" onclick="goBack()">${ICON.back}</button><h1>دعوت راننده</h1><div style="width:36px"></div></div>
       <div class="screen-body">
-        <p style="font-size:13px;color:var(--ink-soft);margin:0 0 16px">شماره موبایل راننده را وارد کنید؛ یک کد دعوت ساخته می‌شود که راننده برای اتصال به کامیون از آن استفاده می‌کند.</p>
+        <p style="font-size:13px;color:var(--ink-soft);margin:0 0 16px">شماره موبایل راننده را وارد کنید. پس از ورود راننده به برنامه با همین شماره، دعوت‌نامه به‌طور خودکار برایش نمایش داده می‌شود و می‌تواند آن را بپذیرد.</p>
         <div class="field"><label>شماره موبایل راننده</label><input id="inv-phone" type="tel" placeholder="09xxxxxxxxx" dir="ltr" style="text-align:left"></div>
         <div class="field"><label>اتصال به کامیون</label>
           <select id="inv-truck"></select>
@@ -579,7 +579,7 @@
         <button class="btn owner-btn" onclick="sendInvite()">${ICON.check}ارسال دعوت</button>
         <div id="invite-result" style="display:none">
           <div class="invite-code-box">
-            <div class="lbl">کد دعوت راننده</div>
+            <div class="lbl">کد دعوت (فقط جهت اطلاع صاحب کامیون)</div>
             <div class="code" id="invite-code-val">DRV-000000</div>
           </div>
           <button class="btn ghost sm" onclick="finishInvite()">باشه، متوجه شدم</button>
@@ -661,7 +661,7 @@
           <h4>پرداخت‌های دستی ثبت‌شده</h4>
           <div id="owner-payments-list"><p style="font-size:12.5px;color:var(--ink-faint);margin:0">هنوز پرداختی ثبت نشده است.</p></div>
         </div>
-        <button class="btn owner-btn" onclick="recordPayment('owner')">${ICON.check}ثبت پرداخت جدید</button>
+        <button class="btn owner-btn" onclick="recordPayment()">${ICON.check}ثبت پرداخت جدید</button>
       </div>
       ${bottomNav('owner','owner-settlement')}
     </section>
@@ -670,10 +670,11 @@
     <section class="screen" data-screen="owner-more">
       <div class="appbar on-owner"><button class="icon-btn" onclick="goTab('owner-dashboard')">${ICON.back}</button><h1>پروفایل و تنظیمات</h1><div style="width:36px"></div></div>
       <div class="screen-body">
-        <div class="profile-head"><div class="pav" style="background:var(--owner)">ص</div><div><strong>صاحب کامیون</strong><span>0912xxxxxxx</span></div></div>
+        <div class="profile-head"><div class="pav" id="omore-avatar" style="background:var(--owner)">ص</div><div><strong id="omore-name">صاحب کامیون</strong><span id="omore-phone">0912xxxxxxx</span></div></div>
         <div class="card" style="padding:4px 12px">
           <div class="more-item"><div class="mi-icon">${ICON.report}</div><span>گزارش‌های مالی</span>${ICON.chev}</div>
           <div class="more-item" onclick="goTo('owner-profile')"><div class="mi-icon">${ICON.user}</div><span>ویرایش پروفایل</span>${ICON.chev}</div>
+          <div class="more-item" onclick="openDeviceRequests()"><div class="mi-icon">${ICON.user}</div><span>ورود از دستگاه جدید</span>${ICON.chev}</div>
           <div class="more-item" onclick="goTo('owner-settings')"><div class="mi-icon">${ICON.settings}</div><span>تنظیمات برنامه</span>${ICON.chev}</div>
           <div class="more-item" onclick="logout()"><div class="mi-icon" style="background:var(--danger-tint);color:var(--danger)">${ICON.logout}</div><span style="color:var(--danger)">خروج از حساب</span></div>
         </div>
@@ -685,12 +686,12 @@
     <section class="screen" data-screen="owner-profile">
       <div class="appbar on-owner"><button class="icon-btn" onclick="goBack()">${ICON.back}</button><h1>پروفایل من</h1><div style="width:36px"></div></div>
       <div class="screen-body">
-        <div class="profile-head"><div class="pav" style="background:var(--owner)">ص</div><div><strong>صاحب کامیون</strong><span>0912xxxxxxx</span></div></div>
+        <div class="profile-head"><div class="pav" id="op-avatar" style="background:var(--owner)">ص</div><div><strong id="op-head-name">صاحب کامیون</strong><span id="op-head-phone">0912xxxxxxx</span></div></div>
         <div class="card">
           <h4>اطلاعات حساب</h4>
           <div class="field"><label>نام و نام خانوادگی</label><input id="op-name" type="text" value="صاحب کامیون"></div>
           <div class="field"><label>نام شرکت (اختیاری)</label><input id="op-company" type="text" placeholder="نام شرکت حمل‌ونقل"></div>
-          <div class="field" style="margin-bottom:0"><label>شماره موبایل</label><input id="op-phone" type="tel" value="0912xxxxxxx" dir="ltr" style="text-align:left"></div>
+          <div class="field" style="margin-bottom:0"><label>شماره موبایل (غیرقابل تغییر)</label><input id="op-phone" type="tel" value="0912xxxxxxx" dir="ltr" style="text-align:left" disabled></div>
         </div>
         <div class="card">
           <div class="row-between" style="margin-bottom:10px"><h4 style="margin:0">اشتراک</h4><span class="status-pill active" id="op-sub-badge">دورهٔ رایگان</span></div>
@@ -699,7 +700,7 @@
           <div class="kv"><span class="k">هزینه اشتراک سالانه</span><span class="v" id="op-sub-price">—</span></div>
           <p style="font-size:11.5px;color:var(--ink-faint);margin:10px 0 0;line-height:1.9">${ICON.info}پس از پایان یک‌ماه استفادهٔ رایگان، برای ادامهٔ استفاده باید اشتراک سالانه تهیه شود.</p>
         </div>
-        <button class="btn owner-btn" onclick="toast('تغییرات پروفایل ذخیره شد')">${ICON.check}ذخیره تغییرات</button>
+        <button class="btn owner-btn" onclick="saveOwnerProfile()">${ICON.check}ذخیره تغییرات</button>
       </div>
     </section>
 
@@ -731,15 +732,14 @@
         <div class="auth-hero">
           <span class="badge driver">${ICON.driver}راننده</span>
           <h2 id="driver-auth-title">ساخت حساب جدید</h2>
-          <p>با کد دعوتی که از صاحب کامیون گرفته‌اید ثبت‌نام کنید</p>
+          <p>ثبت‌نام کنید؛ دعوت‌نامهٔ صاحب کامیون پس از ورود در برنامه نمایش داده می‌شود</p>
         </div>
         <div class="tabs">
           <button class="tab for-driver" onclick="setAuthTab('driver','login')">ورود</button>
-          <button class="tab for-driver active" onclick="setAuthTab('driver','register')">ثبت‌نام با کد دعوت</button>
+          <button class="tab for-driver active" onclick="setAuthTab('driver','register')">ثبت‌نام</button>
         </div>
         <div id="driver-register-fields" style="display:block">
           <div class="field"><label>نام و نام خانوادگی</label><input id="da-name" type="text" placeholder="مثلاً علی رضایی"></div>
-          <div class="field"><label>کد دعوت</label><input id="da-invite-code" type="text" placeholder="DRV-849251" dir="ltr" style="text-align:left"></div>
         </div>
         <div class="field"><label>شماره موبایل</label><input id="da-phone" type="tel" placeholder="09xxxxxxxxx" dir="ltr" style="text-align:left"></div>
         <div class="field"><label id="driver-pass-label">رمز عبور</label><input id="da-password" type="password" placeholder="••••••••"></div>
@@ -755,10 +755,16 @@
         <button class="icon-btn accent" onclick="goTo('driver-profile')">${ICON.user}</button>
       </div>
       <div class="screen-body">
-        <div class="greeting"><p class="hello">سلام، علی 👋</p><h2>وضعیت این ماه</h2></div>
+        <div class="greeting"><p class="hello">سلام، <span id="ddash-hello-name">علی</span> 👋</p><h2>وضعیت این ماه</h2></div>
+        <div id="driver-invite-banner" class="card" style="display:none;border-color:var(--driver);background:var(--driver-tint)">
+          <div class="row-between">
+            <div><strong style="font-size:13.5px">دعوت‌نامهٔ جدید از صاحب کامیون</strong><div style="font-size:11.5px;color:var(--ink-soft);margin-top:2px">برای اتصال به کامیون این دعوت را بپذیرید.</div></div>
+            <button class="btn driver-btn sm" style="width:auto;padding:8px 14px" onclick="acceptPendingInvitation()">پذیرفتن</button>
+          </div>
+        </div>
         <div class="card" style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
           <div class="emblem" style="width:46px;height:46px;border-radius:14px;background:var(--driver-tint);color:var(--driver-dark);display:flex;align-items:center;justify-content:center">${ICON.truck}</div>
-          <div style="flex:1"><strong style="display:block;font-size:14.5px">ولوو — مدل 1401</strong><span style="font-size:12px;color:var(--ink-soft)">پلاک: 22 الف 262 ایران 22</span></div>
+          <div style="flex:1"><strong id="ddash-truck-name" style="display:block;font-size:14.5px">به هیچ کامیونی متصل نیستید</strong><span id="ddash-truck-plate" style="font-size:12px;color:var(--ink-soft)">در انتظار پذیرش دعوت‌نامه</span></div>
           <button class="icon-btn" onclick="goTab('driver-truck')">${ICON.chev}</button>
         </div>
         <div class="stat-grid">
@@ -787,13 +793,13 @@
         <div class="card">
           <div style="text-align:center;padding:10px 0 18px">
             <div style="width:64px;height:64px;border-radius:20px;background:var(--driver-tint);color:var(--driver-dark);display:flex;align-items:center;justify-content:center;margin:0 auto 10px">${ICON.truck}</div>
-            <strong style="font-size:17px;display:block">ولوو</strong>
-            <span style="font-size:12.5px;color:var(--ink-soft)">پلاک: 22 الف 262 ایران 22</span>
+            <strong id="dt-brand" style="font-size:17px;display:block">—</strong>
+            <span id="dt-plate-top" style="font-size:12.5px;color:var(--ink-soft)">متصل نیست</span>
           </div>
-          <div class="kv"><span class="k">برند</span><span class="v">ولوو</span></div>
-          <div class="kv"><span class="k">مدل (سال ساخت)</span><span class="v">1401</span></div>
-          <div class="kv"><span class="k">پلاک</span><span class="v">22 الف 262 ایران 22</span></div>
-          <div class="kv"><span class="k">صاحب کامیون</span><span class="v">صاحب کامیون</span></div>
+          <div class="kv"><span class="k">برند</span><span class="v" id="dt-brand2">—</span></div>
+          <div class="kv"><span class="k">مدل (سال ساخت)</span><span class="v" id="dt-model">—</span></div>
+          <div class="kv"><span class="k">پلاک</span><span class="v" id="dt-plate">—</span></div>
+          <div class="kv"><span class="k">صاحب کامیون</span><span class="v" id="dt-owner">—</span></div>
           <div class="kv"><span class="k">وضعیت اتصال</span><span class="v"><span class="status-pill active">متصل و فعال</span></span></div>
         </div>
         <div class="hairline-note">${ICON.info}این بخش فقط اطلاعاتی است؛ ویرایش کامیون فقط توسط صاحب کامیون انجام می‌شود.</div>
@@ -932,9 +938,10 @@
     <section class="screen" data-screen="driver-more">
       <div class="appbar on-driver"><button class="icon-btn" onclick="goTab('driver-dashboard')">${ICON.back}</button><h1>پروفایل و تنظیمات</h1><div style="width:36px"></div></div>
       <div class="screen-body">
-        <div class="profile-head"><div class="pav" style="background:var(--driver)">ع</div><div><strong>علی رضایی</strong><span>0935xxxxxxx</span></div></div>
+        <div class="profile-head"><div class="pav" id="dmore-avatar" style="background:var(--driver)">ع</div><div><strong id="dmore-name">علی رضایی</strong><span id="dmore-phone">0935xxxxxxx</span></div></div>
         <div class="card" style="padding:4px 12px">
           <div class="more-item" onclick="goTo('driver-profile')"><div class="mi-icon">${ICON.user}</div><span>ویرایش پروفایل</span>${ICON.chev}</div>
+          <div class="more-item" onclick="openDeviceRequests()"><div class="mi-icon">${ICON.user}</div><span>ورود از دستگاه جدید</span>${ICON.chev}</div>
           <div class="more-item" onclick="goTo('driver-settings')"><div class="mi-icon">${ICON.settings}</div><span>تنظیمات برنامه</span>${ICON.chev}</div>
           <div class="more-item" onclick="logout()"><div class="mi-icon" style="background:var(--danger-tint);color:var(--danger)">${ICON.logout}</div><span style="color:var(--danger)">خروج از حساب</span></div>
         </div>
@@ -946,11 +953,11 @@
     <section class="screen" data-screen="driver-profile">
       <div class="appbar on-driver"><button class="icon-btn" onclick="goBack()">${ICON.back}</button><h1>پروفایل من</h1><div style="width:36px"></div></div>
       <div class="screen-body">
-        <div class="profile-head"><div class="pav" style="background:var(--driver)">ع</div><div><strong>علی رضایی</strong><span>0935xxxxxxx</span></div></div>
+        <div class="profile-head"><div class="pav" id="dp-avatar" style="background:var(--driver)">ع</div><div><strong id="dp-head-name">علی رضایی</strong><span id="dp-head-phone">0935xxxxxxx</span></div></div>
         <div class="card">
           <h4>اطلاعات حساب</h4>
           <div class="field"><label>نام و نام خانوادگی</label><input id="dp-name" type="text" value="علی رضایی"></div>
-          <div class="field" style="margin-bottom:0"><label>شماره موبایل</label><input id="dp-phone" type="tel" value="0935xxxxxxx" dir="ltr" style="text-align:left"></div>
+          <div class="field" style="margin-bottom:0"><label>شماره موبایل (غیرقابل تغییر)</label><input id="dp-phone" type="tel" value="0935xxxxxxx" dir="ltr" style="text-align:left" disabled></div>
         </div>
         <div class="card">
           <div class="row-between" style="margin-bottom:10px"><h4 style="margin:0">اشتراک</h4><span class="status-pill active" id="dp-sub-badge">دورهٔ رایگان</span></div>
@@ -959,7 +966,7 @@
           <div class="kv"><span class="k">هزینه اشتراک سالانه</span><span class="v" id="dp-sub-price">—</span></div>
           <p style="font-size:11.5px;color:var(--ink-faint);margin:10px 0 0;line-height:1.9">${ICON.info}پس از پایان یک‌ماه استفادهٔ رایگان، برای ادامهٔ استفاده باید اشتراک سالانهٔ خودتان را تهیه کنید.</p>
         </div>
-        <button class="btn driver-btn" onclick="toast('تغییرات پروفایل ذخیره شد')">${ICON.check}ذخیره تغییرات</button>
+        <button class="btn driver-btn" onclick="saveDriverProfile()">${ICON.check}ذخیره تغییرات</button>
       </div>
     </section>
 
@@ -982,6 +989,16 @@
         </div>
       </div>
       ${bottomNav('driver','driver-more')}
+    </section>
+
+    <!-- DEVICE REQUESTS (shared: seen from either owner-more or driver-more) -->
+    <section class="screen" data-screen="device-requests">
+      <div class="appbar"><button class="icon-btn" onclick="goBack()">${ICON.back}</button><h1>ورود از دستگاه جدید</h1><div style="width:36px"></div></div>
+      <div class="screen-body">
+        <p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 14px;line-height:1.9">${ICON.info}این حساب فقط از یک دستگاه قابل ورود است. اگر خودتان از دستگاه دیگری وارد شدید، درخواستش اینجا نمایش داده می‌شود و باید آن را از همین‌جا تأیید کنید تا دستگاه جدید معتبر شود.</p>
+        <div id="device-requests-list"></div>
+        <button class="btn ghost sm" onclick="loadDeviceRequests()">${ICON.check}بروزرسانی</button>
+      </div>
     </section>
 
   </div>
@@ -1152,235 +1169,332 @@ function simulateTrialEnd(role){
   showPaywall(role);
 }
 
-/* ---------------- Backend ----------------
-   Real persistence: when this page runs inside a Claude Artifact with the
-   `db` capability granted, it uses that shared, realtime document store.
-   When self-hosted (Docker/Nginx/Netlify, per this folder's README) there
-   is no such capability, so it falls back to a same-shaped store backed by
-   the browser's localStorage — data still survives reloads, just per
-   browser instead of shared live across viewers. */
-class LocalDb {
-  constructor(){
-    this.key = 'ta_localdb_v1';
-    this.data = JSON.parse(localStorage.getItem(this.key) || '{}');
-    this.listeners = new Set();
+/* ---------------- Backend connection ----------------
+   Real API calls only — no mock/local data. Change DEFAULT_API_BASE below to your backend's
+   public URL before deploying, or override per-visit with ?api=https://your-host in the page URL
+   (persisted in localStorage so you only need to pass it once per browser). CORS on the backend
+   is already permissive, so this page can be hosted anywhere — a different domain, a plain
+   static file host, even opened as a local file. Storage keys are prefixed ta_user_ so this page
+   can be hosted alongside admin/admin-preview.html on the same origin without clashing. */
+const DEFAULT_API_BASE = 'http://localhost:3000';
+const urlApi = new URLSearchParams(location.search).get('api');
+if (urlApi) localStorage.setItem('ta_user_api_base', urlApi);
+const API_BASE = (localStorage.getItem('ta_user_api_base') || DEFAULT_API_BASE).replace(/\/$/, '');
+
+function getToken(){ return localStorage.getItem('ta_user_token'); }
+function setToken(t){ if (t) localStorage.setItem('ta_user_token', t); else localStorage.removeItem('ta_user_token'); }
+
+function getDeviceId(){
+  let id = localStorage.getItem('ta_device_id');
+  if(!id){
+    id = (crypto.randomUUID ? crypto.randomUUID() : 'dev-' + Math.random().toString(36).slice(2) + Date.now());
+    localStorage.setItem('ta_device_id', id);
   }
-  _save(){ localStorage.setItem(this.key, JSON.stringify(this.data)); }
-  _notify(){ this.listeners.forEach(fn=>fn()); }
-  doc(path){
-    const self = this;
-    return {
-      id: path.split('/').pop(), path,
-      async get(){ const raw = self.data[path]; return { id: path.split('/').pop(), exists: raw !== undefined, data: () => raw }; },
-      async set(body){ self.data[path] = {...body}; self._save(); self._notify(); },
-      async update(body){ self.data[path] = {...(self.data[path]||{}), ...body}; self._save(); self._notify(); },
-      async delete(){ delete self.data[path]; self._save(); self._notify(); },
-      onSnapshot(next){
-        const fire = () => { const raw = self.data[path]; next({ id: path.split('/').pop(), exists: raw !== undefined, data: () => raw }); };
-        fire(); self.listeners.add(fire);
-        return () => self.listeners.delete(fire);
-      }
-    };
-  }
-  collection(path, filters){
-    const self = this;
-    filters = filters || [];
-    const prefix = path.endsWith('/') ? path : path + '/';
-    const matches = (obj) => filters.every(({f,op,v}) => {
-      const val = obj[f];
-      switch(op){
-        case '==': return val === v;
-        case '!=': return val !== v;
-        case '<': return val < v;
-        case '<=': return val <= v;
-        case '>': return val > v;
-        case '>=': return val >= v;
-        case 'in': return Array.isArray(v) && v.includes(val);
-        case 'not-in': return Array.isArray(v) && !v.includes(val);
-        case 'array-contains': return Array.isArray(val) && val.includes(v);
-        default: return true;
-      }
-    });
-    const readAll = () => Object.keys(self.data)
-      .filter(k => k.startsWith(prefix) && k.slice(prefix.length).indexOf('/') === -1)
-      .map(k => ({ id: k.slice(prefix.length), body: self.data[k] }))
-      .filter(({body}) => matches(body));
-    const col = {
-      path,
-      where(f,op,v){ return self.collection(path, [...filters, {f,op,v}]); },
-      doc(id){ return self.doc(prefix + (id || ('id' + Math.random().toString(36).slice(2)))); },
-      async add(body){ const ref = col.doc(); await ref.set(body); return ref; },
-      async get(){ const docs = readAll().map(({id,body}) => ({ id, exists:true, data: () => body })); return { docs, size: docs.length, empty: docs.length===0 }; },
-      onSnapshot(next){
-        const fire = async () => next(await col.get());
-        fire(); self.listeners.add(fire);
-        return () => self.listeners.delete(fire);
-      }
-    };
-    return col;
-  }
+  return id;
 }
 
-let dbApi = null;
-let currentUser = null; // {phone, role, name, ownerId}
-let unsubTrucks = null, unsubDriverData = null, unsubTrips = null, unsubExpenses = null, unsubPayments = null;
+async function api(path, { method = 'GET', body, auth = true } = {}) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (auth) {
+    const token = getToken();
+    if (!token) throw new Error('نشست شما منقضی شده. دوباره وارد شوید.');
+    headers.Authorization = `Bearer ${token}`;
+  }
+  let res;
+  try {
+    res = await fetch(`${API_BASE}${path}`, { method, headers, body: body !== undefined ? JSON.stringify(body) : undefined });
+  } catch (e) {
+    throw new Error(`اتصال به Backend برقرار نشد (${API_BASE}) — آدرس API و در دسترس بودن سرور را بررسی کنید.`);
+  }
+  let data = null;
+  try { data = await res.json(); } catch (e) { /* empty body, e.g. some 204s */ }
+  if (!res.ok) {
+    if (res.status === 401 && auth) { setToken(null); localStorage.removeItem('ta_session_role'); currentUser = null; goRoot('role-select'); }
+    throw new Error((data && data.message) || `خطای ${res.status}`);
+  }
+  return data;
+}
 
-async function initDb(){
-  try{ dbApi = (window.claude && typeof window.claude.use === 'function') ? await window.claude.use('db') : null; }
-  catch(e){ dbApi = null; }
-  if(!dbApi) dbApi = new LocalDb();
+/** Polls the unauthenticated device-approval endpoint every 3s until the new device is approved,
+ *  denied, or the request expires — see backend's single-trusted-device login flow. */
+function pollDeviceApproval(requestId){
+  return new Promise((resolve, reject) => {
+    const iv = setInterval(async () => {
+      try {
+        const res = await api(`/auth/device-requests/${requestId}`, { auth: false });
+        if (res.status === 'authenticated') { clearInterval(iv); resolve(res); }
+        else if (res.status === 'denied') { clearInterval(iv); reject(new Error('درخواست ورود از سوی دستگاه تأییدشده رد شد.')); }
+        else if (res.status === 'expired') { clearInterval(iv); reject(new Error('درخواست ورود منقضی شد؛ دوباره تلاش کنید.')); }
+      } catch (e) { clearInterval(iv); reject(e); }
+    }, 3000);
+  });
+}
 
-  const saved = localStorage.getItem('ta_session');
-  if(saved && dbApi){
-    try{
-      const sess = JSON.parse(saved);
-      const snap = await dbApi.doc('users/'+sess.phone).get();
-      if(snap.exists && snap.data().role === sess.role){
-        setCurrentUser(snap.id, snap.data());
-        setTimeout(()=>{
-          goRoot(sess.role==='owner' ? 'owner-dashboard' : 'driver-dashboard');
-          renderAll();
-        }, 900);
-        return;
+let currentUser = null; // {userId, role, fullName, phoneNumber}
+const AUTH_PREFIX = { owner: 'oa', driver: 'da' };
+
+async function performAuth(role){
+  if(role==='owner' && !ownerSubscribed && ownerTrialDaysLeft<=0){ showPaywall('owner'); return; }
+  if(role==='driver' && !driverSubscribed && driverTrialDaysLeft<=0){ showPaywall('driver'); return; }
+  const prefix = AUTH_PREFIX[role];
+  const phone = document.getElementById(`${prefix}-phone`).value.trim();
+  const password = document.getElementById(`${prefix}-password`).value;
+  if(!phone || !password){ toast('شماره موبایل و رمز عبور را وارد کنید'); return; }
+  const deviceId = getDeviceId();
+  try{
+    let res;
+    if(authMode[role] === 'register'){
+      const fullName = document.getElementById(`${prefix}-name`).value.trim();
+      if(!fullName){ toast('نام و نام خانوادگی را وارد کنید'); return; }
+      const body = { phoneNumber: phone, password, fullName, role, deviceId };
+      if(role==='owner'){
+        const company = document.getElementById('oa-company').value.trim();
+        if(company) body.companyName = company;
       }
-    } catch(e){ /* fall through to role-select */ }
+      res = await api('/auth/register', { method: 'POST', auth: false, body });
+    } else {
+      res = await api('/auth/login', { method: 'POST', auth: false, body: { phoneNumber: phone, password, deviceId } });
+      if(res.status === 'pending_approval'){
+        toast('این دستگاه جدید است؛ در انتظار تأیید از دستگاه قبلی...');
+        res = await pollDeviceApproval(res.requestId);
+      }
+    }
+    await afterAuth(res);
+  } catch(e){ console.error(e); toast(e.message || 'خطا در ارتباط با سرور'); }
+}
+function ownerLogin(){ performAuth('owner'); }
+function driverLogin(){ performAuth('driver'); }
+
+async function afterAuth(res){
+  setToken(res.accessToken);
+  localStorage.setItem('ta_session_role', res.role);
+  currentUser = { userId: res.userId, role: res.role, fullName: res.fullName, phoneNumber: res.phoneNumber };
+  applyTrialInfo(res.role, res);
+  if((res.role==='owner' && !ownerSubscribed && ownerTrialDaysLeft<=0) || (res.role==='driver' && !driverSubscribed && driverTrialDaysLeft<=0)){
+    showPaywall(res.role); return;
+  }
+  toast('خوش آمدید، ' + res.fullName);
+  if(res.role==='owner'){ goRoot('owner-dashboard'); await loadOwnerAll(); }
+  else { goRoot('driver-dashboard'); await loadDriverAll(); }
+}
+
+function applyTrialInfo(role, info){
+  if(role==='owner'){ ownerTrialDaysLeft = info.trialDaysLeft; ownerSubscribed = info.subscriptionStatus !== 'trial'; }
+  else { driverTrialDaysLeft = info.trialDaysLeft; driverSubscribed = info.subscriptionStatus !== 'trial'; }
+}
+
+async function initSession(){
+  const token = getToken();
+  const role = localStorage.getItem('ta_session_role');
+  if(token && role){
+    try{
+      const me = await api('/auth/me');
+      currentUser = { userId: me.userId, role: me.role, fullName: me.fullName, phoneNumber: me.phoneNumber };
+      applyTrialInfo(me.role, me);
+      setTimeout(async ()=>{
+        if(me.role==='owner'){ goRoot('owner-dashboard'); await loadOwnerAll(); }
+        else { goRoot('driver-dashboard'); await loadDriverAll(); }
+      }, 900);
+      return;
+    } catch(e){ setToken(null); localStorage.removeItem('ta_session_role'); }
   }
   setTimeout(()=>{ if(navStack.length===1 && navStack[0]==='splash'){ goRoot('role-select'); } }, 900);
 }
 
-function setCurrentUser(phone, data){
-  currentUser = {phone, role: data.role, name: data.name || '', ownerId: data.ownerId || null};
-  localStorage.setItem('ta_session', JSON.stringify({phone, role: data.role}));
-  if(currentUser.role === 'owner') subscribeOwnerData(); else subscribeDriverData();
-}
-
 function logout(){
   currentUser = null;
-  localStorage.removeItem('ta_session');
-  [unsubTrucks, unsubDriverData, unsubTrips, unsubExpenses, unsubPayments].forEach(u=>u && u());
-  unsubTrucks = unsubDriverData = unsubTrips = unsubExpenses = unsubPayments = null;
-  store.trucks = []; store.drivers = []; store.trips = []; store.expenses = []; store.payments = [];
+  setToken(null);
+  localStorage.removeItem('ta_session_role');
+  store.trucks = []; store.drivers = []; store.trips = []; store.expenses = [];
+  store.settlement = null; store.driverProfile = null; store.ownerProfile = null;
   goRoot('role-select');
 }
 
-function subscribeOwnerData(){
-  if(!dbApi || !currentUser) return;
-  [unsubTrucks, unsubDriverData, unsubTrips, unsubExpenses, unsubPayments].forEach(u=>u && u());
-  unsubTrucks = dbApi.collection('trucks').where('ownerId','==',currentUser.phone).onSnapshot(snap=>{
-    store.trucks = snap.docs.map(d=>({id:d.id, ...d.data()}));
-    renderTrucks(); renderDashboardStats();
-  }, e=>console.error('trucks sync error', e));
-  unsubDriverData = dbApi.collection('users').where('role','==','driver').where('ownerId','==',currentUser.phone).onSnapshot(snap=>{
-    store.drivers = snap.docs.map(d=>({id:d.id, name:d.data().name, phone:d.data().phone, truck:d.data().truckPlate, status:d.data().status, payType:d.data().payType, payValue:d.data().payValue}));
-    renderDrivers(); renderDashboardStats(); renderSettlement();
-  }, e=>console.error('drivers sync error', e));
-  unsubTrips = dbApi.collection('trips').where('ownerId','==',currentUser.phone).onSnapshot(snap=>{
-    store.trips = snap.docs.map(d=>({id:d.id, ...d.data()}));
-    renderTrips(); renderIncome(); renderSettlement(); renderDashboardStats();
-  }, e=>console.error('trips sync error', e));
-  unsubExpenses = dbApi.collection('expenses').where('ownerId','==',currentUser.phone).onSnapshot(snap=>{
-    store.expenses = snap.docs.map(d=>({id:d.id, ...d.data()}));
-    renderExpenses(); renderIncome(); renderSettlement();
-  }, e=>console.error('expenses sync error', e));
-  unsubPayments = dbApi.collection('payments').where('ownerId','==',currentUser.phone).onSnapshot(snap=>{
-    store.payments = snap.docs.map(d=>({id:d.id, ...d.data()}));
-    renderSettlement();
-  }, e=>console.error('payments sync error', e));
-}
-
-function subscribeDriverData(){
-  if(!dbApi || !currentUser) return;
-  [unsubDriverData, unsubTrips, unsubExpenses, unsubPayments].forEach(u=>u && u());
-  unsubDriverData = dbApi.doc('users/'+currentUser.phone).onSnapshot(snap=>{
-    if(!snap.exists) return;
-    const d = snap.data();
-    store.drivers = [{id:snap.id, name:d.name, phone:d.phone, truck:d.truckPlate, status:d.status, payType:d.payType, payValue:d.payValue}];
-    renderDrivers(); renderSettlement(); renderDashboardStats();
-  }, e=>console.error('driver profile sync error', e));
-  unsubTrips = dbApi.collection('trips').where('driverId','==',currentUser.phone).onSnapshot(snap=>{
-    store.trips = snap.docs.map(d=>({id:d.id, ...d.data()}));
-    renderTrips(); renderIncome(); renderSettlement();
-  }, e=>console.error('trips sync error', e));
-  unsubExpenses = dbApi.collection('expenses').where('driverId','==',currentUser.phone).onSnapshot(snap=>{
-    store.expenses = snap.docs.map(d=>({id:d.id, ...d.data()}));
-    renderExpenses(); renderIncome(); renderSettlement();
-  }, e=>console.error('expenses sync error', e));
-  unsubPayments = dbApi.collection('payments').where('driverId','==',currentUser.phone).onSnapshot(snap=>{
-    store.payments = snap.docs.map(d=>({id:d.id, ...d.data()}));
-    renderSettlement();
-  }, e=>console.error('payments sync error', e));
-}
-
-async function ownerLogin(){
-  if(!ownerSubscribed && ownerTrialDaysLeft<=0){ showPaywall('owner'); return; }
-  if(!dbApi){ toast('اتصال به دیتابیس برقرار نیست'); return; }
-  const phone = document.getElementById('oa-phone').value.trim();
-  const password = document.getElementById('oa-password').value;
-  if(!phone || !password){ toast('شماره موبایل و رمز عبور را وارد کنید'); return; }
-  try{
-    if(authMode.owner === 'register'){
-      const name = document.getElementById('oa-name').value.trim();
-      const company = document.getElementById('oa-company').value.trim();
-      if(!name){ toast('نام و نام خانوادگی را وارد کنید'); return; }
-      const existing = await dbApi.doc('users/'+phone).get();
-      if(existing.exists){ toast('این شماره قبلاً ثبت‌نام کرده؛ از تب «ورود» استفاده کنید'); return; }
-      const data = {role:'owner', name, company, phone, password, createdAt: Date.now()};
-      await dbApi.doc('users/'+phone).set(data);
-      setCurrentUser(phone, data);
-      toast('ثبت‌نام موفق — خوش آمدید');
-    } else {
-      const snap = await dbApi.doc('users/'+phone).get();
-      if(!snap.exists || snap.data().role !== 'owner' || snap.data().password !== password){ toast('شماره موبایل یا رمز عبور اشتباه است'); return; }
-      setCurrentUser(phone, snap.data());
-      toast('ورود موفق — خوش آمدید');
-    }
-    goRoot('owner-dashboard'); renderAll();
-  } catch(e){ console.error(e); toast('خطا در ارتباط با دیتابیس'); }
-}
-
-async function driverLogin(){
-  if(!driverSubscribed && driverTrialDaysLeft<=0){ showPaywall('driver'); return; }
-  if(!dbApi){ toast('اتصال به دیتابیس برقرار نیست'); return; }
-  const phone = document.getElementById('da-phone').value.trim();
-  const password = document.getElementById('da-password').value;
-  if(!phone || !password){ toast('شماره موبایل و رمز عبور را وارد کنید'); return; }
-  try{
-    if(authMode.driver === 'register'){
-      const name = document.getElementById('da-name').value.trim();
-      const code = document.getElementById('da-invite-code').value.trim();
-      if(!name || !code){ toast('نام و کد دعوت را وارد کنید'); return; }
-      const invSnap = await dbApi.doc('invitations/'+code).get();
-      if(!invSnap.exists || invSnap.data().status !== 'pending'){ toast('کد دعوت معتبر نیست یا قبلاً استفاده شده'); return; }
-      const inv = invSnap.data();
-      const existing = await dbApi.doc('users/'+phone).get();
-      if(existing.exists){ toast('این شماره قبلاً ثبت‌نام کرده؛ از تب «ورود» استفاده کنید'); return; }
-      const data = {role:'driver', name, phone, password, ownerId: inv.ownerId, truckPlate: inv.truckPlate, status:'فعال', payType:'percent', payValue:20, createdAt: Date.now()};
-      await dbApi.doc('users/'+phone).set(data);
-      await dbApi.doc('invitations/'+code).update({status:'accepted', driverPhone: phone});
-      setCurrentUser(phone, data);
-      toast('ثبت‌نام موفق — خوش آمدید');
-    } else {
-      const snap = await dbApi.doc('users/'+phone).get();
-      if(!snap.exists || snap.data().role !== 'driver' || snap.data().password !== password){ toast('شماره موبایل یا رمز عبور اشتباه است'); return; }
-      setCurrentUser(phone, snap.data());
-      toast('ورود موفق — خوش آمدید');
-    }
-    goRoot('driver-dashboard'); renderAll();
-  } catch(e){ console.error(e); toast('خطا در ارتباط با دیتابیس'); }
-}
-
-/* ---------------- Data store (all synced live from the db capability once logged in) ---------------- */
+/* ---------------- Data store (loaded from the real backend on login / after each mutation) ---------------- */
 const store = {
   trucks: [],
   drivers: [],
   trips: [],
   expenses: [],
-  payments: [],
+  settlement: null,
+  driverProfile: null,
+  ownerProfile: null,
 };
 let pendingCat = 'سوخت';
+let pendingInvitations = [];
 
 function totalIncome(){ return store.trips.reduce((s,t)=>s+t.income,0); }
 function totalExpense(){ return store.expenses.reduce((s,e)=>s+e.amount,0); }
+
+/** The driver whose pay type/value is used for per-trip share display: the logged-in driver's
+ *  own profile, or (on the owner side) the single connected driver — this app has no UI yet for
+ *  an owner managing more than one driver's settlement at a time. */
+function currentDriverForShare(){
+  if(currentUser && currentUser.role==='driver'){
+    return store.driverProfile ? { payType: store.driverProfile.payType, payValue: store.driverProfile.payValue } : null;
+  }
+  return store.drivers[0] || null;
+}
+function tripShare(t, driver){
+  if(!driver) return 0;
+  const net = t.income - (t.commission||0);
+  return driver.payType==='percent' ? Math.round(net * driver.payValue/100) : net;
+}
+
+function renderProfileHeaders(){
+  if(!currentUser) return;
+  const initial = (currentUser.fullName||'?').charAt(0);
+  const setEls = (nameId, phoneId, avatarId) => {
+    const n = document.getElementById(nameId), p = document.getElementById(phoneId), a = document.getElementById(avatarId);
+    if(n) n.textContent = currentUser.fullName;
+    if(p) p.textContent = currentUser.phoneNumber;
+    if(a) a.textContent = initial;
+  };
+  if(currentUser.role==='owner'){
+    setEls('omore-name','omore-phone','omore-avatar');
+    setEls('op-head-name','op-head-phone','op-avatar');
+    const hello = document.getElementById('odash-hello-name'); if(hello) hello.textContent = currentUser.fullName;
+    const nameInput = document.getElementById('op-name'); if(nameInput) nameInput.value = currentUser.fullName;
+    const phoneInput = document.getElementById('op-phone'); if(phoneInput) phoneInput.value = currentUser.phoneNumber;
+    const companyInput = document.getElementById('op-company'); if(companyInput) companyInput.value = (store.ownerProfile && store.ownerProfile.companyName) || '';
+  } else {
+    setEls('dmore-name','dmore-phone','dmore-avatar');
+    setEls('dp-head-name','dp-head-phone','dp-avatar');
+    const hello = document.getElementById('ddash-hello-name'); if(hello) hello.textContent = currentUser.fullName;
+    const nameInput = document.getElementById('dp-name'); if(nameInput) nameInput.value = currentUser.fullName;
+    const phoneInput = document.getElementById('dp-phone'); if(phoneInput) phoneInput.value = currentUser.phoneNumber;
+  }
+}
+
+function renderDriverTruckCard(){
+  const t = store.driverProfile && store.driverProfile.currentTruck;
+  const nameEl = document.getElementById('ddash-truck-name'), plateEl = document.getElementById('ddash-truck-plate');
+  if(nameEl) nameEl.textContent = t ? `${t.brand} — مدل ${t.modelYear}` : 'به هیچ کامیونی متصل نیستید';
+  if(plateEl) plateEl.textContent = t ? `پلاک: ${t.plate}` : 'در انتظار پذیرش دعوت‌نامه';
+  const brand = document.getElementById('dt-brand'), brand2 = document.getElementById('dt-brand2'),
+        plateTop = document.getElementById('dt-plate-top'), model = document.getElementById('dt-model'),
+        plate = document.getElementById('dt-plate'), owner = document.getElementById('dt-owner');
+  if(brand) brand.textContent = t ? t.brand : '—';
+  if(brand2) brand2.textContent = t ? t.brand : '—';
+  if(plateTop) plateTop.textContent = t ? 'پلاک: ' + t.plate : 'متصل نیست';
+  if(model) model.textContent = t ? t.modelYear : '—';
+  if(plate) plate.textContent = t ? t.plate : '—';
+  if(owner) owner.textContent = t ? (t.ownerFullName || '—') : '—';
+}
+
+async function saveOwnerProfile(){
+  const fullName = document.getElementById('op-name').value.trim();
+  const companyName = document.getElementById('op-company').value.trim();
+  if(!fullName){ toast('نام و نام خانوادگی را وارد کنید'); return; }
+  try{
+    const updated = await api('/owners/me', { method: 'PUT', body: { fullName, companyName } });
+    currentUser.fullName = updated.fullName;
+    store.ownerProfile = updated;
+    renderProfileHeaders();
+    toast('تغییرات پروفایل ذخیره شد');
+  } catch(e){ console.error(e); toast(e.message || 'خطا در ذخیره‌سازی پروفایل'); }
+}
+async function saveDriverProfile(){
+  const fullName = document.getElementById('dp-name').value.trim();
+  if(!fullName){ toast('نام و نام خانوادگی را وارد کنید'); return; }
+  try{
+    const updated = await api('/drivers/me', { method: 'PUT', body: { fullName } });
+    currentUser.fullName = updated.fullName;
+    renderProfileHeaders();
+    toast('تغییرات پروفایل ذخیره شد');
+  } catch(e){ console.error(e); toast(e.message || 'خطا در ذخیره‌سازی پروفایل'); }
+}
+
+function openDeviceRequests(){ goTo('device-requests'); loadDeviceRequests(); }
+async function loadDeviceRequests(){
+  try{
+    const res = await api('/auth/device-requests');
+    renderDeviceRequests(res.requests || []);
+  } catch(e){ console.error(e); toast(e.message || 'خطا در بارگذاری درخواست‌ها'); }
+}
+function renderDeviceRequests(list){
+  const el = document.getElementById('device-requests-list');
+  if(!el) return;
+  el.innerHTML = list.length ? list.map(r=>`
+    <div class="card">
+      <div class="kv"><span class="k">دستگاه</span><span class="v">${r.deviceLabel || 'ناشناس'}</span></div>
+      <div class="kv"><span class="k">زمان درخواست</span><span class="v">${new Date(r.createdAt).toLocaleString('fa-IR')}</span></div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn sm" style="width:auto;flex:1;background:var(--success)" onclick="respondDeviceRequest('${r.id}',true)">تأیید ورود</button>
+        <button class="btn ghost sm" style="width:auto;flex:1" onclick="respondDeviceRequest('${r.id}',false)">رد کردن</button>
+      </div>
+    </div>`).join('') : emptyState('درخواست ورودی در انتظار نیست');
+}
+async function respondDeviceRequest(id, approve){
+  try{
+    await api(`/auth/device-requests/${id}/${approve ? 'approve' : 'deny'}`, { method: 'POST' });
+    toast(approve ? 'ورود از دستگاه جدید تأیید شد' : 'درخواست رد شد');
+    await loadDeviceRequests();
+  } catch(e){ console.error(e); toast(e.message || 'خطا در ثبت پاسخ'); }
+}
+
+async function checkPendingInvitations(){
+  try{
+    const res = await api('/driver/invitations');
+    pendingInvitations = res.invitations || [];
+    const banner = document.getElementById('driver-invite-banner');
+    if(banner) banner.style.display = pendingInvitations.length ? 'block' : 'none';
+  } catch(e){ console.error(e); }
+}
+async function acceptPendingInvitation(){
+  const inv = pendingInvitations[0];
+  if(!inv) return;
+  try{
+    await api(`/driver/invitations/${inv.id}/accept`, { method: 'POST' });
+    toast('دعوت‌نامه پذیرفته شد — به کامیون متصل شدید');
+    await loadDriverAll();
+  } catch(e){ console.error(e); toast(e.message || 'خطا در پذیرفتن دعوت'); }
+}
+
+async function loadOwnerAll(){
+  try{
+    const [trucksRes, driversRes, tripsRes, expensesRes, ownerProfile] = await Promise.all([
+      api('/trucks'), api('/drivers'), api('/owner/trips'), api('/owner/expenses'), api('/owners/me'),
+    ]);
+    store.trucks = trucksRes.trucks;
+    store.drivers = driversRes.drivers;
+    store.trips = tripsRes.trips;
+    store.expenses = expensesRes.expenses;
+    store.ownerProfile = ownerProfile;
+    await loadOwnerSettlement();
+    renderProfileHeaders();
+    renderAll();
+  } catch(e){ console.error(e); toast(e.message || 'خطا در بارگذاری اطلاعات'); }
+}
+
+async function loadDriverAll(){
+  try{
+    const [profile, tripsRes, expensesRes] = await Promise.all([
+      api('/drivers/me'), api('/driver/trips'), api('/driver/expenses'),
+    ]);
+    store.driverProfile = profile;
+    store.drivers = [{ id: profile.id, fullName: profile.fullName, payType: profile.payType, payValue: profile.payValue, plate: profile.currentTruck ? profile.currentTruck.plate : null }];
+    store.trips = tripsRes.trips;
+    store.expenses = expensesRes.expenses;
+    await loadDriverSettlement();
+    await checkPendingInvitations();
+    renderProfileHeaders();
+    renderDriverTruckCard();
+    renderAll();
+  } catch(e){ console.error(e); toast(e.message || 'خطا در بارگذاری اطلاعات'); }
+}
+
+async function loadOwnerSettlement(){
+  const driver = store.drivers[0];
+  if(!driver){ store.settlement = null; return; }
+  try{ store.settlement = await api(`/owner/settlement/summary?driverId=${encodeURIComponent(driver.id)}`); }
+  catch(e){ console.error(e); store.settlement = null; }
+}
+async function loadDriverSettlement(){
+  if(!store.driverProfile || !store.driverProfile.currentTruck){ store.settlement = null; return; }
+  try{ store.settlement = await api('/driver/settlement/summary'); }
+  catch(e){ console.error(e); store.settlement = null; }
+}
 
 /* ---------------- Renderers ---------------- */
 function renderTrucks(){
@@ -1395,11 +1509,11 @@ function renderTrucks(){
            ontouchstart="startPress('${t.id}')" ontouchend="cancelPress()" ontouchmove="cancelPress()"
            oncontextmenu="return false">
         <div class="avatar" style="background:var(--owner-tint);color:var(--owner-dark)">${ICON.truck}</div>
-        <div class="meta"><strong>${t.brand} ${t.model}</strong><span>پلاک: ${t.plate}</span></div>
+        <div class="meta"><strong>${t.brand} ${t.modelYear}</strong><span>پلاک: ${t.plate}</span></div>
         <div class="side"><button class="icon-btn" onclick="openTruckActions('${t.id}')">${ICON.chev}</button></div>
       </div>`).join('');
   }
-  if(selEl) selEl.innerHTML = store.trucks.map(t=>`<option value="${t.plate}">${t.brand} ${t.model} — ${t.plate}</option>`).join('');
+  if(selEl) selEl.innerHTML = store.trucks.map(t=>`<option value="${t.id}">${t.brand} ${t.modelYear} — ${t.plate}</option>`).join('');
 }
 function payDescription(d){
   return d.payType==='salary' ? `حقوق ثابت: ${money(d.payValue)} / ماه` : `${fa(d.payValue)}% از هر سرویس`;
@@ -1409,29 +1523,29 @@ function renderDrivers(){
   el.innerHTML = !store.drivers.length ? emptyState('هنوز راننده‌ای ثبت نشده است') :
     store.drivers.map(d=>`
       <div class="list-item" style="cursor:pointer" onclick="openDriverDetail('${d.id}')">
-        <div class="avatar" style="background:var(--owner-tint);color:var(--owner-dark)">${d.name.charAt(0)}</div>
-        <div class="meta"><strong>${d.name}</strong><span>کامیون: ${d.truck} · ${payDescription(d)}</span></div>
-        <div class="side" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="status-pill ${d.status==='فعال'?'active':'pending'}">${d.status}</span>${ICON.chev}</div>
+        <div class="avatar" style="background:var(--owner-tint);color:var(--owner-dark)">${(d.fullName||'?').charAt(0)}</div>
+        <div class="meta"><strong>${d.fullName}</strong><span>کامیون: ${d.plate||'—'} · ${payDescription(d)}</span></div>
+        <div class="side" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="status-pill active">فعال</span>${ICON.chev}</div>
       </div>`).join('');
 }
 function tripRow(t, forOwner){
   return `<div class="list-item" style="cursor:pointer" onclick="openTripDetail('${t.id}')">
     <div class="avatar" style="background:${forOwner?'var(--owner-tint)':'var(--driver-tint)'};color:${forOwner?'var(--owner-dark)':'var(--driver-dark)'}">${ICON.route}</div>
-    <div class="meta"><strong>${t.origin} ← ${t.dest}</strong><span>${t.cargo} · ${t.weight} تن · ${t.date}</span></div>
+    <div class="meta"><strong>${t.origin} ← ${t.destination}</strong><span>${t.cargoType||'—'} · ${t.cargoWeight||'—'} تن · ${t.tripDate}</span></div>
     <div class="side"><div class="amount pos">${amt(t.income)}</div>${ICON.chev}</div>
   </div>`;
 }
 function expenseRow(e){
   return `<div class="list-item">
     <div class="avatar" style="background:var(--danger-tint);color:var(--danger)">${ICON.expense}</div>
-    <div class="meta"><strong>${e.cat}</strong><span>${e.desc||'—'} · ${e.date}</span></div>
+    <div class="meta"><strong>${e.category}</strong><span>${e.description||'—'} · ${e.expenseDate}</span></div>
     <div class="side"><div class="amount neg">-${amt(e.amount)}</div></div>
   </div>`;
 }
 function incomeRow(t){
   return `<div class="list-item">
     <div class="avatar" style="background:var(--success-tint);color:var(--success)">${ICON.income}</div>
-    <div class="meta"><strong>سرویس ${t.origin} به ${t.dest}</strong><span>${t.date}</span></div>
+    <div class="meta"><strong>سرویس ${t.origin} به ${t.destination}</strong><span>${t.tripDate}</span></div>
     <div class="side"><div class="amount pos">+${amt(t.income)}</div></div>
   </div>`;
 }
@@ -1451,18 +1565,18 @@ let viewingTripId = null;
 function openTripDetail(tripId){
   const t = store.trips.find(x=>x.id===tripId);
   if(!t) return;
-  const driver = store.drivers[0] || null;
+  const driver = currentDriverForShare();
   viewingTripId = tripId;
   document.getElementById('td-origin').textContent = t.origin;
-  document.getElementById('td-dest').textContent = t.dest;
-  document.getElementById('td-cargo').textContent = t.cargo;
-  document.getElementById('td-weight').textContent = t.weight + ' تن';
+  document.getElementById('td-dest').textContent = t.destination;
+  document.getElementById('td-cargo').textContent = t.cargoType || '—';
+  document.getElementById('td-weight').textContent = (t.cargoWeight || '—') + ' تن';
   document.getElementById('td-income').textContent = money(t.income);
-  document.getElementById('td-date').textContent = t.date;
-  document.getElementById('td-id').textContent = '#' + fa(t.id);
-  document.getElementById('td-desc').textContent = t.desc && t.desc.trim() ? t.desc : 'توضیحاتی ثبت نشده است.';
+  document.getElementById('td-date').textContent = t.tripDate;
+  document.getElementById('td-id').textContent = '#' + fa(t.id.slice(0,8));
+  document.getElementById('td-desc').textContent = t.description && t.description.trim() ? t.description : 'توضیحاتی ثبت نشده است.';
   document.getElementById('td-commission').textContent = money(t.commission||0);
-  document.getElementById('td-share').textContent = driver ? money(driverNetShare(t, driver)) : '—';
+  document.getElementById('td-share').textContent = driver ? money(tripShare(t, driver)) : '—';
   document.getElementById('td-settled').innerHTML = t.settled ? `<span class="status-pill settled">تسویه‌شده</span>` : `<span class="status-pill pending">تسویه‌نشده</span>`;
   document.getElementById('td-paidto').textContent = t.paidTo==='driver' ? 'راننده' : t.paidTo==='owner' ? 'صاحب کامیون' : '—';
   goTo('trip-detail');
@@ -1491,24 +1605,11 @@ function renderDashNet(){
   netEl.textContent = money(Math.abs(net));
   netEl.style.color = net >= 0 ? 'var(--success)' : 'var(--danger)';
 }
-function driverNetShare(t, driver){
-  const net = t.income - (t.commission||0);
-  return driver.payType==='percent' ? Math.round(net * driver.payValue/100) : net;
-}
-function driverEntitlement(driver){
-  if(!driver) return 0;
-  if(driver.payType==='salary') return driver.payValue;
-  return store.trips.reduce((s,t)=> s + driverNetShare(t,driver), 0);
-}
-function amountAlreadyWithDriver(driver){
-  if(!driver) return 0;
-  return store.trips.filter(t=>t.settled && t.paidTo==='driver').reduce((s,t)=> s + driverNetShare(t,driver), 0);
-}
 function payDescriptionFull(d){
   return d.payType==='salary' ? `حقوق ثابت ماهانه (${money(d.payValue)})` : `${fa(d.payValue)}% از هر سرویس`;
 }
 function serviceSettlementCard(t, driver, editable){
-  const share = driver ? driverNetShare(t, driver) : 0;
+  const share = driver ? tripShare(t, driver) : 0;
   const settledBadge = t.settled ? `<span class="status-pill settled">تسویه‌شده</span>` : `<span class="status-pill pending">تسویه‌نشده</span>`;
   const paidToText = t.paidTo==='driver' ? 'واریز به راننده' : t.paidTo==='owner' ? 'واریز به صاحب کامیون' : '';
   const commissionCell = editable
@@ -1550,8 +1651,8 @@ function serviceSettlementCard(t, driver, editable){
 
   return `<div class="${cardClass}">
     <div class="row-between" style="margin-bottom:8px">
-      <strong style="font-size:13.5px">${t.origin} ← ${t.dest}</strong>
-      <span style="font-size:11px;color:var(--ink-faint)">${t.date}</span>
+      <strong style="font-size:13.5px">${t.origin} ← ${t.destination}</strong>
+      <span style="font-size:11px;color:var(--ink-faint)">${t.tripDate}</span>
     </div>
     <div class="kv"><span class="k">مبلغ کل بارنامه</span><span class="v">${money(t.income)}</span></div>
     <div class="kv"><span class="k">کمیسیون بارنامه</span><span class="v">${commissionCell}</span></div>
@@ -1584,27 +1685,28 @@ async function confirmSettlement(tripId){
     if(!selPaidTo){ toast('مشخص کنید واریزی به چه کسی بوده است'); return; }
     paidTo = selPaidTo.dataset.paidto;
   }
-  if(!dbApi) return;
   try{
-    await dbApi.doc('trips/'+tripId).update({settled, paidTo});
+    await api(`/trips/${tripId}/settlement`, { method: 'PUT', body: { settled, paidTo } });
     editingSettlementId = null;
     toast('وضعیت تسویه ثبت و تایید شد');
-  } catch(e){ console.error(e); toast('خطا در ذخیره‌سازی'); }
+    await loadOwnerAll();
+  } catch(e){ console.error(e); toast(e.message || 'خطا در ذخیره‌سازی'); }
 }
 async function updateCommission(tripId, val){
-  if(!dbApi) return;
   const raw = String(val).replace(/[^\d]/g,'');
   const commission = fromDisplayUnit(parseInt(raw||'0',10));
-  try{ await dbApi.doc('trips/'+tripId).update({commission}); }
-  catch(e){ console.error(e); toast('خطا در ذخیره‌سازی'); }
+  try{ await api(`/trips/${tripId}/settlement`, { method: 'PUT', body: { commission } }); await loadOwnerAll(); }
+  catch(e){ console.error(e); toast(e.message || 'خطا در ذخیره‌سازی'); }
 }
 function renderSettlement(){
-  const driver = store.drivers[0] || null;
-  const inc = totalIncome(), exp = totalExpense();
-  const entitlement = driverEntitlement(driver);
-  const paidDirect = amountAlreadyWithDriver(driver);
-  const manualPaid = store.payments.reduce((s,p)=>s+p.amount,0);
-  const remaining = Math.max(entitlement - paidDirect - manualPaid, 0);
+  const driver = currentDriverForShare();
+  const s = store.settlement;
+  const inc = s ? s.totalIncome : 0;
+  const exp = s ? s.totalExpense : 0;
+  const entitlement = s ? s.driverEntitlement : 0;
+  const paidDirect = s ? s.paidDirect : 0;
+  const remaining = s ? s.remaining : 0;
+  const payments = s ? s.payments : [];
   const label = driver ? 'حقوق راننده (' + payDescriptionFull(driver) + ')' : 'حقوق راننده';
 
   document.getElementById('settle-owner-income').textContent = money(inc);
@@ -1621,8 +1723,8 @@ function renderSettlement(){
   document.getElementById('settle-driver-paid-direct').textContent = money(paidDirect);
   document.getElementById('driver-settle-amount').textContent = money(remaining);
 
-  const paidHtml = store.payments.length ? store.payments.map(p=>`
-    <div class="kv"><span class="k">${p.date}</span><span class="v" style="color:var(--success)">${amt(p.amount)} ${unitLabel()}</span></div>
+  const paidHtml = payments.length ? payments.map(p=>`
+    <div class="kv"><span class="k">${jalaliOrRaw(p.paymentDate)}</span><span class="v" style="color:var(--success)">${amt(p.amount)} ${unitLabel()}</span></div>
   `).join('') : `<p style="font-size:12.5px;color:var(--ink-faint);margin:0">هنوز پرداختی ثبت نشده است.</p>`;
   document.getElementById('owner-payments-list').innerHTML = paidHtml;
   document.getElementById('driver-payments-list').innerHTML = paidHtml;
@@ -1631,9 +1733,20 @@ function renderSettlement(){
   document.getElementById('owner-settlement-trips-list').innerHTML = tripsSorted.length ? tripsSorted.map(t=>serviceSettlementCard(t, driver, true)).join('') : emptyState('سرویسی ثبت نشده است');
   document.getElementById('driver-settlement-trips-list').innerHTML = tripsSorted.length ? tripsSorted.map(t=>serviceSettlementCard(t, driver, false)).join('') : emptyState('سرویسی ثبت نشده است');
 }
+/** payment_date is stored as an ISO timestamp by the manual-payment endpoint but as a free-text
+ *  Jalali string when a caller supplies one — display whichever was actually stored. */
+function jalaliOrRaw(v){
+  if(!v) return '—';
+  return /^\d{4}-\d{2}-\d{2}T/.test(v) ? new Date(v).toLocaleDateString('fa-IR') : v;
+}
 function renderDashboardStats(){
   document.getElementById('dash-truck-count').textContent = fa(store.trucks.length);
   document.getElementById('dash-driver-count').textContent = fa(store.drivers.length);
+  const pendingEl = document.getElementById('dash-pending');
+  if(pendingEl && currentUser && currentUser.role==='owner'){
+    const pending = store.trips.filter(t=>!t.settled).length;
+    pendingEl.textContent = fa(pending) + ' مورد';
+  }
 }
 function renderAll(){ renderTrucks(); renderDrivers(); renderTrips(); renderExpenses(); renderIncome(); renderSettlement(); renderDashboardStats(); renderSubscriptionInfo(); }
 
@@ -1670,18 +1783,18 @@ async function submitAddTruck(){
   const brand = document.getElementById('af-brand').value.trim();
   const model = document.getElementById('af-model').value.trim();
   if(!plate || !brand || !model){ toast('لطفاً شماره پلاک، برند و مدل را کامل وارد کنید'); return; }
-  if(!dbApi || !currentUser){ toast('اتصال به دیتابیس برقرار نیست'); return; }
   try{
     if(editingTruckId){
-      await dbApi.doc('trucks/'+editingTruckId).update({plate, brand, model});
+      await api(`/trucks/${editingTruckId}`, { method: 'PUT', body: { plate, brand, modelYear: model } });
       toast('کامیون ویرایش شد');
       editingTruckId = null;
     } else {
-      await dbApi.collection('trucks').add({ownerId: currentUser.phone, plate, brand, model, createdAt: Date.now()});
+      await api('/trucks', { method: 'POST', body: { plate, brand, modelYear: model } });
       toast('کامیون با موفقیت افزوده شد');
     }
     goTab('owner-trucks');
-  } catch(e){ console.error(e); toast('خطا در ذخیره‌سازی کامیون'); }
+    await loadOwnerAll();
+  } catch(e){ console.error(e); toast(e.message || 'خطا در ذخیره‌سازی کامیون'); }
 }
 
 /* ---------------- Long-press (truck edit/delete) ---------------- */
@@ -1714,28 +1827,26 @@ function editTruckAction(){
   document.getElementById('af-plate-3').value = parts.n3;
   document.getElementById('af-plate-province').value = parts.prov;
   document.getElementById('af-brand').value = t.brand;
-  document.getElementById('af-model').value = t.model;
+  document.getElementById('af-model').value = t.modelYear;
   goTo('owner-add-truck');
 }
 async function deleteTruckAction(){
   const id = actionTruckId;
   closeTruckActions();
-  if(!id || !dbApi) return;
-  try{ await dbApi.doc('trucks/'+id).delete(); toast('کامیون حذف شد'); }
-  catch(e){ console.error(e); toast('خطا در حذف کامیون'); }
+  if(!id) return;
+  try{ await api(`/trucks/${id}`, { method: 'DELETE' }); toast('کامیون حذف شد'); await loadOwnerAll(); }
+  catch(e){ console.error(e); toast(e.message || 'خطا در حذف کامیون'); }
 }
 async function sendInvite(){
   const phone = document.getElementById('inv-phone').value.trim();
-  const truckPlate = document.getElementById('inv-truck').value;
+  const truckId = document.getElementById('inv-truck').value;
   if(!phone){ toast('شماره موبایل راننده را وارد کنید'); return; }
-  if(!truckPlate){ toast('ابتدا یک کامیون ثبت کنید'); return; }
-  if(!dbApi || !currentUser){ toast('اتصال به دیتابیس برقرار نیست'); return; }
-  const code = 'DRV-' + Math.floor(100000 + Math.random()*899999);
+  if(!truckId){ toast('ابتدا یک کامیون ثبت کنید'); return; }
   try{
-    await dbApi.doc('invitations/'+code).set({code, ownerId: currentUser.phone, truckPlate, phone, status:'pending', createdAt: Date.now()});
-    document.getElementById('invite-code-val').textContent = code;
+    const res = await api('/invitations', { method: 'POST', body: { driverPhone: phone, truckId } });
+    document.getElementById('invite-code-val').textContent = res.inviteCode;
     document.getElementById('invite-result').style.display = 'block';
-  } catch(e){ console.error(e); toast('خطا در ارسال دعوت'); }
+  } catch(e){ console.error(e); toast(e.message || 'خطا در ارسال دعوت'); }
 }
 function finishInvite(){
   document.getElementById('invite-result').style.display = 'none';
@@ -1750,9 +1861,9 @@ function openDriverDetail(driverId){
   const d = store.drivers.find(x=>x.id===driverId);
   if(!d){ toast('ابتدا یک راننده اضافه کنید'); return; }
   selectedDriverId = driverId;
-  document.getElementById('dd-avatar').textContent = d.name.charAt(0);
-  document.getElementById('dd-name').textContent = d.name;
-  document.getElementById('dd-truck').textContent = 'کامیون: ' + d.truck;
+  document.getElementById('dd-avatar').textContent = (d.fullName||'?').charAt(0);
+  document.getElementById('dd-name').textContent = d.fullName;
+  document.getElementById('dd-truck').textContent = 'کامیون: ' + (d.plate || '—');
   document.getElementById('dd-percent-value').value = d.payType==='percent' ? d.payValue : '';
   document.getElementById('dd-salary-value').value = d.payType==='salary' ? d.payValue : '';
   document.getElementById('dd-salary-label').textContent = `مبلغ حقوق ماهانه (${unitLabel()})`;
@@ -1766,7 +1877,7 @@ function selectPayType(type){
 }
 async function saveDriverPay(){
   const d = store.drivers.find(x=>x.id===selectedDriverId);
-  if(!d || !dbApi) return;
+  if(!d) return;
   const type = document.querySelector('[data-screen="driver-detail"] .toggle-chip.sel[data-paytype]').dataset.paytype;
   let payValue;
   if(type==='percent'){
@@ -1779,30 +1890,30 @@ async function saveDriverPay(){
     payValue = fromDisplayUnit(parseInt(raw,10));
   }
   try{
-    await dbApi.doc('users/'+selectedDriverId).update({payType: type, payValue});
+    await api(`/drivers/${selectedDriverId}/pay`, { method: 'PUT', body: { payType: type, payValue } });
     toast('تنظیمات حقوق راننده ذخیره شد');
     goTab('owner-drivers');
-  } catch(e){ console.error(e); toast('خطا در ذخیره‌سازی'); }
+    await loadOwnerAll();
+  } catch(e){ console.error(e); toast(e.message || 'خطا در ذخیره‌سازی'); }
 }
 async function submitTrip(){
   const origin = document.getElementById('tf-origin').value.trim();
-  const dest = document.getElementById('tf-dest').value.trim();
+  const destination = document.getElementById('tf-dest').value.trim();
   const incomeRaw = document.getElementById('tf-income').value.replace(/[^\d]/g,'');
-  if(!origin || !dest || !incomeRaw){ toast('مبدا، مقصد و درآمد را وارد کنید'); return; }
-  if(!dbApi || !currentUser){ toast('اتصال به دیتابیس برقرار نیست'); return; }
+  const tripDate = document.getElementById('tf-date').value.trim();
+  if(!origin || !destination || !incomeRaw || !tripDate){ toast('مبدا، مقصد، درآمد و تاریخ را وارد کنید'); return; }
   try{
-    await dbApi.collection('trips').add({
-      ownerId: currentUser.ownerId, driverId: currentUser.phone, origin, dest,
-      cargo: document.getElementById('tf-cargo').value.trim() || '—',
-      weight: document.getElementById('tf-weight').value.trim() || '—',
+    await api('/trips', { method: 'POST', body: {
+      origin, destination, tripDate,
       income: fromDisplayUnit(parseInt(incomeRaw,10)),
-      date: document.getElementById('tf-date').value.trim() || '—',
-      desc: document.getElementById('tf-desc').value.trim(),
-      commission: 0, settled: false, paidTo: null, createdAt: Date.now(),
-    });
+      cargoType: document.getElementById('tf-cargo').value.trim() || undefined,
+      cargoWeight: document.getElementById('tf-weight').value.trim() || undefined,
+      description: document.getElementById('tf-desc').value.trim() || undefined,
+    }});
     toast('سرویس با موفقیت ثبت شد');
     goTab('driver-trips');
-  } catch(e){ console.error(e); toast('خطا در ثبت سرویس'); }
+    await loadDriverAll();
+  } catch(e){ console.error(e); toast(e.message || 'خطا در ثبت سرویس'); }
 }
 function pickCat(elm){
   document.querySelectorAll('#exp-cat-row .toggle-chip').forEach(c=>c.classList.remove('sel'));
@@ -1812,43 +1923,36 @@ function pickCat(elm){
 function mockAttach(){ document.getElementById('ef-receipt-lbl').textContent = 'رسید.jpg ضمیمه شد ✓'; }
 async function submitExpense(){
   const amountRaw = document.getElementById('ef-amount').value.replace(/[^\d]/g,'');
-  if(!amountRaw){ toast('مبلغ هزینه را وارد کنید'); return; }
-  if(!dbApi || !currentUser){ toast('اتصال به دیتابیس برقرار نیست'); return; }
+  const expenseDate = document.getElementById('ef-date').value.trim();
+  if(!amountRaw || !expenseDate){ toast('مبلغ و تاریخ هزینه را وارد کنید'); return; }
   try{
-    await dbApi.collection('expenses').add({
-      ownerId: currentUser.ownerId, driverId: currentUser.phone, cat: pendingCat,
+    await api('/expenses', { method: 'POST', body: {
+      category: pendingCat, expenseDate,
       amount: fromDisplayUnit(parseInt(amountRaw,10)),
-      date: document.getElementById('ef-date').value.trim() || '—',
-      desc: document.getElementById('ef-desc').value.trim(),
-      createdAt: Date.now(),
-    });
+      description: document.getElementById('ef-desc').value.trim() || undefined,
+    }});
     toast('هزینه با موفقیت ثبت شد');
     goTab('driver-expenses');
-  } catch(e){ console.error(e); toast('خطا در ثبت هزینه'); }
+    await loadDriverAll();
+  } catch(e){ console.error(e); toast(e.message || 'خطا در ثبت هزینه'); }
 }
-async function recordPayment(role){
-  const driver = store.drivers[0] || null;
-  const entitlement = driverEntitlement(driver);
-  const paidDirect = amountAlreadyWithDriver(driver);
-  const manualPaid = store.payments.reduce((s,p)=>s+p.amount,0);
-  const remaining = entitlement - paidDirect - manualPaid;
-  if(remaining <= 0){ toast('چیزی برای پرداخت باقی نمانده است'); return; }
-  if(!dbApi || !driver){ toast('اتصال به دیتابیس برقرار نیست'); return; }
+async function recordPayment(){
+  const s = store.settlement;
+  const driver = store.drivers[0];
+  if(!s || s.remaining <= 0){ toast('چیزی برای پرداخت باقی نمانده است'); return; }
+  if(!driver){ toast('ابتدا یک راننده متصل کنید'); return; }
   try{
-    await dbApi.collection('payments').add({
-      ownerId: currentUser.role==='owner' ? currentUser.phone : currentUser.ownerId,
-      driverId: driver.phone, amount: remaining, date: '1403/06/12', createdAt: Date.now(),
-    });
+    await api('/owner/settlement/payments', { method: 'POST', body: { driverId: driver.id, amount: s.remaining } });
     toast('پرداخت با موفقیت ثبت شد');
-  } catch(e){ console.error(e); toast('خطا در ثبت پرداخت'); }
+    await loadOwnerAll();
+  } catch(e){ console.error(e); toast(e.message || 'خطا در ثبت پرداخت'); }
 }
 
 /* ---------------- Init ---------------- */
-document.getElementById('inv-truck');
 applyCurrencyLabels();
 renderAll();
 render('splash');
-initDb();
+initSession();
 </script>
 </body>
 </html>
