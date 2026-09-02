@@ -55,7 +55,7 @@ CREATE TABLE subscriptions (
     id VARCHAR(36) PRIMARY KEY,
     owner_id VARCHAR(36) NOT NULL REFERENCES owners(id) ON DELETE CASCADE,
     plan_id VARCHAR(36) NOT NULL REFERENCES subscription_plans(id) ON DELETE RESTRICT,
-    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'expired', 'cancelled')),
+    status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'expired', 'cancelled')),
     started_at TEXT,
     expires_at TEXT,
     created_at TEXT NOT NULL
@@ -68,7 +68,7 @@ CREATE TABLE orders (
     plan_id VARCHAR(36) NOT NULL REFERENCES subscription_plans(id) ON DELETE RESTRICT,
     subscription_id VARCHAR(36) REFERENCES subscriptions(id) ON DELETE SET NULL,
     amount INTEGER NOT NULL,
-    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'paid', 'failed', 'cancelled')),
+    status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'paid', 'failed', 'cancelled')),
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
@@ -79,7 +79,7 @@ CREATE TABLE subscription_payments (
     order_id VARCHAR(36) NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
     amount INTEGER NOT NULL,
     provider TEXT NOT NULL,
-    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'successful', 'failed')),
+    status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'successful', 'failed')),
     reference_id TEXT,
     created_at TEXT NOT NULL
 );

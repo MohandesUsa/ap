@@ -13,10 +13,15 @@
 --     entirely (TEXT affinity) but stores and compares the values identically either way.
 --   - Other UNIQUE-constrained free text (phone numbers, plates, tokens) is VARCHAR with a length
 --     generous enough for its real values (see the comment on each), for the same reason.
---   - Enums are VARCHAR + CHECK(...) instead of a native ENUM type — requires MySQL 8.0.16+ or
---     MariaDB 10.2.1+ for CHECK to actually be enforced (older versions parse but silently ignore
---     it, both long past end-of-life for anything this project targets), and SQLite has
---     supported CHECK for as long as this project has existed.
+--   - Enums are TEXT/VARCHAR + CHECK(...) instead of a native ENUM type — requires MySQL 8.0.16+
+--     or MariaDB 10.2.1+ for CHECK to actually be enforced (older versions parse but silently
+--     ignore it, both long past end-of-life for anything this project targets), and SQLite has
+--     supported CHECK for as long as this project has existed. Any enum column that also has a
+--     DEFAULT must be VARCHAR(N), never TEXT — real MySQL 8.0 (unlike MariaDB, which is lenient
+--     here) rejects a plain DEFAULT on TEXT/BLOB/GEOMETRY/JSON columns outright
+--     (ER_BLOB_CANT_HAVE_DEFAULT). This was caught late: the whole suite passed against MariaDB
+--     10.11 without ever exercising this path, and it only surfaced against a real MySQL 8.0
+--     Docker image on first deploy.
 --   - Timestamps are TEXT (ISO-8601, written by application code) instead of a native TIMESTAMP
 --     type, which keeps sorting/comparison correct on both engines without relying on
 --     engine-specific "now()"/CURRENT_TIMESTAMP defaults or timezone-conversion quirks.
@@ -51,7 +56,7 @@ CREATE TABLE drivers (
     license_number TEXT,
     -- Phase 2 addendum §11.8: pay is EITHER percent OR salary — one type + one value column,
     -- never two independent nullable columns.
-    pay_type TEXT NOT NULL DEFAULT 'percent' CHECK (pay_type IN ('percent', 'salary')),
+    pay_type VARCHAR(20) NOT NULL DEFAULT 'percent' CHECK (pay_type IN ('percent', 'salary')),
     pay_value INTEGER NOT NULL DEFAULT 20,
     created_at TEXT NOT NULL
 );
@@ -64,7 +69,7 @@ CREATE TABLE trucks (
     plate VARCHAR(64) NOT NULL UNIQUE,
     brand TEXT NOT NULL,
     model_year TEXT NOT NULL,
-    status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'inactive')),
+    status VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'inactive')),
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
@@ -76,7 +81,7 @@ CREATE TABLE driver_trucks (
     truck_id VARCHAR(36) NOT NULL REFERENCES trucks(id) ON DELETE CASCADE,
     start_date TEXT NOT NULL,
     end_date TEXT,
-    status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'inactive'))
+    status VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'inactive'))
 );
 CREATE INDEX idx_driver_trucks_driver_id ON driver_trucks(driver_id);
 CREATE INDEX idx_driver_trucks_truck_id ON driver_trucks(truck_id);
@@ -89,7 +94,7 @@ CREATE TABLE invitations (
     owner_id VARCHAR(36) NOT NULL REFERENCES owners(id) ON DELETE CASCADE,
     driver_phone VARCHAR(20) NOT NULL,
     truck_id VARCHAR(36) REFERENCES trucks(id) ON DELETE SET NULL,
-    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'expired', 'cancelled')),
+    status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'expired', 'cancelled')),
     accepted_by_user_id VARCHAR(36) REFERENCES users(id) ON DELETE SET NULL,
     expires_at TEXT NOT NULL,
     created_at TEXT NOT NULL
@@ -156,7 +161,7 @@ CREATE TABLE settlements (
     total_income INTEGER NOT NULL DEFAULT 0,
     total_expense INTEGER NOT NULL DEFAULT 0,
     net_payable INTEGER NOT NULL DEFAULT 0,
-    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'settled')),
+    status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'settled')),
     created_at TEXT NOT NULL
 );
 
@@ -173,7 +178,11 @@ CREATE TABLE payments (
 CREATE TABLE audit_logs (
     id VARCHAR(36) PRIMARY KEY,
     user_id VARCHAR(36) REFERENCES users(id) ON DELETE SET NULL,
-    action TEXT NOT NULL,
+    -- VARCHAR, not TEXT: this column is indexed below, and real MySQL 8.0 (unlike MariaDB)
+    -- rejects indexing a bare TEXT/BLOB column without an explicit prefix length outright
+    -- (ER_BLOB_KEY_WITHOUT_LENGTH) — action names are short fixed identifiers, so a real length
+    -- limit costs nothing (longest in use today is 31 chars; 64 leaves headroom).
+    action VARCHAR(64) NOT NULL,
     entity_type TEXT,
     entity_id TEXT,
     old_value TEXT,
